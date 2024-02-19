@@ -119,7 +119,7 @@ end
 
 end
 
-
+%% BeiDou GFLC Calculator
 
 function BeiDou_GFLC=BeiDou_GFLC_Calculator(obs,obs_header)
 
@@ -170,8 +170,8 @@ switch string(RNXVersion)
             fprintf(['No BeiDou Observables recognized for station ' obs_header.MarkerName(1:4) '[L2I.L6I - L2X.L6X]\n'])
         end
 
-        BeiDou_GFLC=PhaseJumpsCorrector(BeiDou_GFLC,5);
-        BeiDou_GFLC=PhaseJumpsCorrector(BeiDou_GFLC,10);
+        BeiDou_GFLC.gflc=PhaseJumpsCorrector(BeiDou_GFLC.gflc,5);
+        BeiDou_GFLC.gflc=PhaseJumpsCorrector(BeiDou_GFLC.gflc,10);
 
 end
 

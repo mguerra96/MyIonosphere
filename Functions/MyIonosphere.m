@@ -12,6 +12,8 @@ function [CleanOutputs , Statistics]=MyIonosphere(MyIonoSettings)
 %
 % Written by Marco Guerra
 
+warning off
+
 % SETTINGS MANAGER
 
 ts=MyIonoSettings.StartTime;
@@ -45,7 +47,7 @@ end
 if isfield(MyIonoSettings,'RinexDir')
     DB_Dir=MyIonoSettings.RinexDir;
 else
-    return 
+    return
 end
 
 StartTicTime=tic;
@@ -84,26 +86,33 @@ obs_files=[dir([DB_Dir '\obs\*.rnx']) ; dir([DB_Dir '\obs\*.*o'])];
 Outputs=cell(size(obs_files));
 Outputs_key=zeros(size(obs_files));
 
-mkdir(['.\RINEX_FILES\Errors\' datestr(ts,'dd_mm_yy')])
+if ~exist([DB_Dir '\Errors\' datestr(ts,'dd_mm_yy')],'dir')
+    mkdir([DB_Dir '\Errors\' datestr(ts,'dd_mm_yy')])
+end
 
 fprintf('READING RINEX FILES...\n')
 
-parfor fileIdx=1:size(obs_files,1)
+WaitMessage = parfor_wait(length(obs_files), 'Waitbar', true);
+
+for fileIdx=1:size(obs_files,1)
 
     fprintf('%d of %d\n',[fileIdx , size(obs_files,1)])
     obs_file=obs_files(fileIdx);
 
     try
-        [obs, obs_header]=MyRinexRead([obs_file.folder '\' obs_file.name]);
+        [obs, obs_header]=MyRinexRead(obs_file);
     catch ME
         obs=[];
         obs_header=[];
         fprintf(['Error loading obs file: ' obs_file.name '\n']);
-        Outputs{fileIdx}=ME;
+        Outputs{fileIdx}={ME obs_file.name};
         Outputs_key(fileIdx,1)=-1;
-        mkdir([DB_Dir '\Errors'])
-        movefile([obs_file.folder '\' obs_file.name],[DB_Dir  '\Errors\' datestr(ts,'dd_mm_yy') '\' obs_file.name]);
+        if ~exist([DB_Dir '\Errors'],'dir')
+            mkdir([DB_Dir '\Errors'])
+        end
+        movefile([obs_file.folder '\' obs_file.name],[DB_Dir  '\Errors\' datestr(ts,'dd_mm_yy') '\' obs_file.name],'f');
     end
+
 
     if ~isempty(obs) && year(obs_header.FirstObsTime)==yy && sum(floor(date2doy(datenum(obs_header.FirstObsTime)))==doys)>0
         try
@@ -114,24 +123,38 @@ parfor fileIdx=1:size(obs_files,1)
             fprintf(['Error computing GFLC for file: ' obs_file.name '\n']);
             Outputs{fileIdx}=ME;
             Outputs_key(fileIdx,1)=-1;
-            mkdir([DB_Dir '\Errors'])
-            movefile([obs_file.folder '\' obs_file.name],[DB_Dir '\Errors\'  datestr(ts,'dd_mm_yy') '\' obs_file.name]);
+            if ~exist([DB_Dir '\Errors'],'dir')
+                mkdir([DB_Dir '\Errors'])
+            end
+            movefile([obs_file.folder '\' obs_file.name],[DB_Dir '\Errors\'  datestr(ts,'dd_mm_yy') '\' obs_file.name],'f');
         end
 
     end
+
+    WaitMessage.Send;
+
 end
+
+WaitMessage.Destroy;
 
 Statistics.TimeNeeded.ObsRead_GFLCSATPOS=toc(StepTicTime);
 StepTicTime=tic;
 
+Statistics.Errors=Outputs(Outputs_key==-1);
+Statistics.NumOfSuccesses=sum(Outputs_key==1);
+Statistics.NumOfErrors=sum(Outputs_key==-1);
 
 % CREATION OF THE DATAFRAME WITH ALL THE OBSERVATIONAL ARCS
 fprintf('CREATING DATAFRAME WITH OBSERVATIONAL ARCS...\n')
 CleanOutputs=Outputs(Outputs_key==1);
+
+if isempty(CleanOutputs)
+    return
+end
+
 CleanOutputs=vertcat(CleanOutputs{:});
 CleanOutputs.ArcID=strcat(CleanOutputs.stat,"_",CleanOutputs.prn);
 CleanOutputs=CleanOutputs(CleanOutputs.ele>=Elevation_Cutoff,:);
-
 
 % CREATION OF ID OF SINGLE ARCS TO ALLOW OPEARTION ON ARCS
 fprintf('CREATING ARC UNIQUE IDENTIFIER...\n')
@@ -153,8 +176,6 @@ PhaseJumpsCorrector_f=@(x) PhaseJumpsCorrector(x,5);
 GFLC_Corrected=rowfun(PhaseJumpsCorrector_f,CleanOutputs,"GroupingVariables","ArcID","InputVariables",{'GFLC'},"OutputVariableNames","GFLC");
 CleanOutputs.GFLC=GFLC_Corrected.GFLC;
 
-
-
 if ToVertical
     % CALIBRATION WITH NeQuick2 TO REDUCE DETRENING ERRORS ON AMPLITUDE
     fprintf('CALIBRATION WITH NeQuick2...\n')
@@ -166,14 +187,14 @@ if ToVertical
     Statistics.TimeNeeded.NeQuickCalibration=toc(StepTicTime);
 end
 
-mkdir([DB_Dir '.\Outputs'])
+if ~exist([DB_Dir '\Outputs'],'dir')
+    mkdir([DB_Dir '\Outputs'])
+end
+
 save([DB_Dir '.\Outputs\' datestr(ts,'ddmmyy@hhMM') '_' datestr(te,'ddmmyy@hhMM') '_Data.mat'],'CleanOutputs');
 
 % CREATION OF THE STATISTICS STRUCT WITH REPORTS ON ELAPSED FILES
 Statistics.TimeNeeded.Total=toc(StartTicTime);
-Statistics.Errors=Outputs(Outputs_key==-1);
-Statistics.NumOfSuccesses=sum(Outputs_key==1);
-Statistics.NumOfErrors=sum(Outputs_key==-1);
 Statistics.NumOfOutOfTime=sum(Outputs_key==0);
 Statistics.NumOfFiles=length(Outputs_key);
 
