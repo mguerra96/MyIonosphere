@@ -4,6 +4,7 @@ nav_files=dir([DB_Dir '\nav\*.rnx']);
 
 dt2 = unique(dateshift(dt1, 'start', 'day'));
 
+FrequencyNumber=struct();
 SATPOS=struct();
 SATPOS.GPS=[];
 SATPOS.BeiDou=[];
@@ -21,9 +22,9 @@ for iNavFile=1:length(nav_files)
     if sum(dt2==datetime(doy2jd(year,doy),'ConvertFrom','juliandate'))==1
 
         nav=rinexread([nav_files(iNavFile).folder '\' nav_files(iNavFile).name]);
-        FrequencyNumber=unique(table(nav.GLONASS.SatelliteID,nav.GLONASS.FrequencyNumber,'VariableNames',{'prn','freqn'}),'rows');
-        [~,repeatedRows]=unique(FrequencyNumber.prn);
-        FrequencyNumber=FrequencyNumber(repeatedRows,:);
+        FrequencyNumber_Temp=unique(table(nav.GLONASS.SatelliteID,nav.GLONASS.FrequencyNumber,'VariableNames',{'prn','freqn'}),'rows');
+        [~,repeatedRows]=unique(FrequencyNumber_Temp.prn);
+        FrequencyNumber.(datestr(datetime(doy2jd(year,doy),'ConvertFrom','juliandate'),'mmmddyyyy'))=FrequencyNumber_Temp(repeatedRows,:);
         dt=datetime(doy2jd(year,doy),'ConvertFrom','juliandate'):seconds(t_res):datetime(doy2jd(year,doy+1),'ConvertFrom','juliandate')-seconds(t_res);
         dt=intersect(dt,dt1);
 

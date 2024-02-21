@@ -1,8 +1,8 @@
-function phase_out = PhaseJumpsCorrector(phase_in, std_max)
+function [phase_out,time] = PhaseJumpsCorrector(phase_in, time, std_max)
 
 phdiff = diff(phase_in);
 phstd = std(phdiff);
-idx = find(abs(phdiff) > phstd * std_max | abs(phdiff)>1);
+idx = find(abs(phdiff) > phstd * std_max | abs(phdiff)>.5);
 idx1 = [idx; numel(phase_in)];
 
 for xx = 1:numel(idx1)-1

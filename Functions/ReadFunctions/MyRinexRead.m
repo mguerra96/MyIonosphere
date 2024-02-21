@@ -5,7 +5,7 @@ obs_file_dir=[obs_file.folder '\' obs_file.name];
 version=VersionFinder(obs_file_dir);
 
 try
-    
+
     switch version(1)
         case '2'
             [obs, obs_header]=my_rinexread2(obs_file_dir);
@@ -30,6 +30,14 @@ catch ME
     elseif strcmp(ME.identifier,'nav_positioning:rinexInternal:InvalidFileVersion')
 
         HandleVersionError(obs_file);
+
+    elseif strcmp(ME.identifier,'MATLAB:string:PositionOutOfRange')
+
+        HandlePositionOutOfRangeError(obs_file);
+
+    elseif strcmp(ME.identifier,'MATLAB:UndefinedFunction')
+        
+        HandleUndefinedFunctionError(obs_file);
 
     end
 
