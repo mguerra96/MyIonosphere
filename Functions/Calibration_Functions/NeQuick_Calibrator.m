@@ -1,4 +1,4 @@
-function vtec=NeQuick_Calibrator(stec,lat,lon,azi,ele,dt,Hipp)
+function stec=NeQuick_Calibrator(stec,lat,lon,azi,ele,dt)
 
 % this function uses nequick to "calibrate" and verticalize the gflc of
 % phase measurements. To do so, it assign zero gflc to the point of max
@@ -6,7 +6,7 @@ function vtec=NeQuick_Calibrator(stec,lat,lon,azi,ele,dt,Hipp)
 % verticalize. This should allow a low degree of mapping function error
 
 if dt(end)-dt(1)<duration(minutes(30))
-    vtec=nan(size(stec));
+    stec=nan(size(stec));
 else
     try
 
@@ -45,17 +45,18 @@ else
         cd(NeQuick2_Path);
 
         bias = NeQuick2(lat_stat,lon_stat,0,lat_sat,lon_sat,sat_height, yy-2000, mm,1,hr,1,10,1)*0.1; %calculate stec with nequick given stat and satellite coordaintes in lla format
+        
+        stec=sstec+bias;
 
         % move back to initial dir
-        cd(init_dir);
+        cd(init_dir);    
 
-        vtec=(sstec+bias).*cos(asin(6371/(6371+Hipp)*cosd(ele)));
-        if min(vtec)<0
-            vtec=vtec+abs(min(vtec))+1;
+        if min(stec)<0
+            stec=stec+abs(min(stec))+1;
         end
+        
     catch
         stec(:)=nan;
-        vtec=stec;
     end
 end
 

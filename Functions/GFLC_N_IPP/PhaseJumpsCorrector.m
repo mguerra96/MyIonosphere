@@ -10,7 +10,7 @@ for xx = 1:numel(idx1)-1
     phase_in(idx1(xx)+1 : idx1(xx+1)) = phase_in(idx1(xx) + 1:idx1(xx + 1)) + phx;
 end
 
-phase_out = phase_in;
+phase_out = phase_in-mean(phase_in,'omitnan');
 
 end
 

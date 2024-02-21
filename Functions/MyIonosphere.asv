@@ -185,6 +185,7 @@ if ToVertical
         vTEC=rowfun(vert_f,CleanOutputs,"GroupingVariables","ArcID","InputVariables",{'sTEC','Ele'},"OutputVariableNames","vTEC");
         CleanOutputs.vTEC=vTEC.vTEC;
    else    
+        GFLC_
         vTEC=rowfun(vert_f,CleanOutputs,"GroupingVariables","ArcID","InputVariables",{'GFLC','Ele'},"OutputVariableNames","vTEC");
         CleanOutputs.vTEC=vTEC.vTEC;
    end

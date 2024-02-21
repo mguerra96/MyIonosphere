@@ -216,8 +216,6 @@ lambdaL2 = c / L2;
 PrToTec = 1/40.308*(L1^2*L2^2)/(L1^2-L2^2)/1e16;
 
 GFLC = (phase1 * lambdaL1 - phase2 * lambdaL2) * PrToTec;
-GFLC=PhaseJumpsCorrector(GFLC,4);
-GFLC=PhaseJumpsCorrector(GFLC,5);
 
 prn=string(['G' num2str(prn,'%.02d')]);
 
@@ -248,8 +246,6 @@ lambdaL2 = c / L2;
 PrToTec = 1/40.308*(L1^2*L2^2)/(L1^2-L2^2)/1e16;
 
 GFLC = (phase1 * lambdaL1 - phase2 * lambdaL2) * PrToTec;
-GFLC=PhaseJumpsCorrector(GFLC,4);
-GFLC=PhaseJumpsCorrector(GFLC,5);
 
 prn=string(['R' num2str(prn,'%.02d')]);
 
@@ -270,8 +266,6 @@ lambdaL2 = c / L2;
 PrToTec = 1/40.308*(L1^2*L2^2)/(L1^2-L2^2)/1e16;
 
 GFLC = (phase1 * lambdaL1 - phase2 * lambdaL2) * PrToTec;
-GFLC=PhaseJumpsCorrector(GFLC,4);
-GFLC=PhaseJumpsCorrector(GFLC,5);
 
 prn=string(['E' num2str(prn,'%.02d')]);
 
@@ -292,8 +286,6 @@ lambdaL2 = c / L2;
 PrToTec = 1/40.308*(L1^2*L2^2)/(L1^2-L2^2)/1e16;
 
 GFLC = (phase1 * lambdaL1 - phase2 * lambdaL2) * PrToTec;
-GFLC=PhaseJumpsCorrector(GFLC,3);
-GFLC=PhaseJumpsCorrector(GFLC,5);
 
 prn=string(['C' num2str(prn,'%.02d')]);
 
@@ -313,9 +305,6 @@ lambdaL2 = c / L2;
 PrToTec = 1/40.308*(L1^2*L2^2)/(L1^2-L2^2)/1e16;
 
 GFLC = (phase1 * lambdaL1 - phase2 * lambdaL2) * PrToTec;
-
-GFLC=PhaseJumpsCorrector(GFLC,4);
-GFLC=PhaseJumpsCorrector(GFLC,5);
 
 prn=string(['S' num2str(prn,'%.02d')]);
 
