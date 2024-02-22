@@ -1,5 +1,7 @@
 function version=VersionFinder(obs_file_dir)
 
+%function that finds the rinex version in the given obs file
+
 fID=fopen(obs_file_dir);
 
 while 1

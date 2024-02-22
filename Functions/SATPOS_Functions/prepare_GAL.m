@@ -1,5 +1,7 @@
 function GALNav=prepare_GAL(nav)
 
+%prepare Galileo ephemeris for the SatellitePosition function
+
 GALNav=struct();
 
 for sat=1:40

@@ -1,11 +1,14 @@
 function [obs, obs_header]=my_rinexread2(obs_file_dir)
 
+% Homemade function that reads rinex v2.xx files
+
 finp = fopen(obs_file_dir,'r');
 fileBuffer = textscan(finp, '%s', 'Delimiter', '\n', 'whitespace', '');
 fclose(finp);
 
 fileBuffer = fileBuffer{1};
 
+% Exctract necessary data from header of obs file
 MarkerName=fileBuffer{contains(fileBuffer,"MARKER NAME")}(1:4);
 approxPosition=split(fileBuffer{contains(fileBuffer,"APPROX POSITION")});
 obsTypes_Mat=char(fileBuffer(contains(fileBuffer,"TYPES OF OBSERV")));
@@ -18,8 +21,9 @@ obs_header.FileVersion=my_str2num(FileVersion{2});
 obs_header.FirstObsTime=FirstObsTime;
 obs_header.MarkerName=MarkerName;
 
-headerSize=find(contains(fileBuffer,"END OF HEADER"));
+headerSize=find(contains(fileBuffer,"END OF HEADER")); %find length of header in rinex file
 
+% indentify number and name of observables present in rinex file
 numOfObs=str2double(obsTypes_Mat(1,5:6));
 obsTypes_Mat=obsTypes_Mat(:,11:60);
 obsTypes_Mat=strsplit(reshape([obsTypes_Mat repmat(blanks(3),size(obsTypes_Mat,1),1)]',1,[]));

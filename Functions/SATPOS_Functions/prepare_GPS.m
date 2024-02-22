@@ -1,5 +1,7 @@
 function GPSNav=prepare_GPS(nav)
 
+%prepare GPS ephemeris for the SatellitePosition function
+
 GPSNav=struct();
 
 for sat=1:40

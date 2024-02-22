@@ -1,5 +1,7 @@
 function GLONav=prepare_GLO(nav)
 
+%prepare GLONASS ephemeris for the SatellitePosition function
+
 GLONav=struct();
 
 for sat=1:40

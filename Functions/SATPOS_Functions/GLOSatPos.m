@@ -1,8 +1,11 @@
 function GLOPos=GLOSatPos(nav,ts,t_res)
 
+% utility function that calculates the GLONASS satpos for each satellite and merge them into single table
+% leap seconds are not considered, there is an error in GLONASS position, which is negligible for ionospheric studies
+
 [GPSweek,GPSsec] = greg2gps([year(ts) month(ts) day(ts) hour(ts) minute(ts) second(ts)]);
 
-GLOTimeWanted = [GPSweek,GPSsec]; %GPS2UTCtime([GPSweek,GPSsec],leapSeconds);
+GLOTimeWanted = [GPSweek,GPSsec]; 
 
 GLOPos=[];
 

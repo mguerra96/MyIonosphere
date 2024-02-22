@@ -65,8 +65,6 @@ switch floor(obs_header.FileVersion)
             if isfield(obs,'GPS') && ~isempty(obs.GPS) && sum(ismember(obs.GPS.Properties.VariableNames,{'L1C','L2W'}))==2
                 gps_gflc_func=@(x,y,z) GPS_GFLC(x,y,z);
                 GFLC.GPS=rowfun(gps_gflc_func,obs.GPS,'InputVariables',{'L1C','L2W','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
-            else
-                %                 fprintf(['No GPS Observables recognized for station ' obs_header.MarkerName(1:4) '[L1C.L2W]\n'])
             end
         end
 
@@ -83,8 +81,6 @@ switch floor(obs_header.FileVersion)
             elseif isfield(obs,'GLONASS') && ~isempty(obs.GLONASS) && sum(ismember(obs.GLONASS.Properties.VariableNames,{'L1P','L2C'}))==2
                 glo_gflc_func=@(x,y,z) GLO_GFLC(x,y,z,FrequencyNumber);
                 GFLC.GLONASS=rowfun(glo_gflc_func,obs.GLONASS,'InputVariables',{'L1P','L2C','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
-            else
-                %                 fprintf(['No GLONASS Observables recognized for station ' obs_header.MarkerName(1:4) '[L1C.L2P - L1C.L2C - L1P.L2P - L1P.L2C]\n'])
             end
         end
 
@@ -101,8 +97,6 @@ switch floor(obs_header.FileVersion)
             elseif isfield(obs,'Galileo') && ~isempty(obs.Galileo) && sum(ismember(obs.Galileo.Properties.VariableNames,{'L5I','L7I'}))==2
                 gal_gflc_func=@(x,y,z) GAL_GFLC(x,y,z,GALf5,GALf7);
                 GFLC.Galileo=rowfun(gal_gflc_func,obs.Galileo,'InputVariables',{'L5I','L7I','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
-            else
-                %                 fprintf(['No Galileo Observables recognized for station ' obs_header.MarkerName(1:4) '[L1C.L5Q - L1X.L5X]\n'])
             end
         end
 
@@ -122,8 +116,6 @@ switch floor(obs_header.FileVersion)
             elseif isfield(obs,'SBAS') && ~isempty(obs.SBAS) && sum(ismember(obs.SBAS.Properties.VariableNames,{'L1C','L5X'}))==2
                 sbas_gflc_func=@(x,y,z) SBAS_GFLC(x,y,z);
                 GFLC.SBAS=rowfun(sbas_gflc_func,obs.SBAS,'InputVariables',{'L1C','L5X','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
-            else
-                %                 fprintf(['No SBAS Observables recognized for station ' obs_header.MarkerName(1:4) '[L1C.L5I.L5X.L5Q]\n'])
             end
         end
 
@@ -165,7 +157,6 @@ switch string(RNXVersion)
             bds_gflc_func=@(x,y,z) BDS_GFLC(x,y,z,fL1,fL7);
             BeiDou_GFLC=rowfun(bds_gflc_func,obs.BeiDou,'InputVariables',{'L2I','L7I','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
         else
-            %             fprintf(['No BeiDou Observables recognized for station ' obs_header.MarkerName(1:4) '[L1I.L6I - L1I.L7I]\n'])
             BeiDou_GFLC=[];
         end
 
@@ -194,7 +185,6 @@ switch string(RNXVersion)
             bds_gflc_func=@(x,y,z) BDS_GFLC(x,y,z,fL2,fL7);
             BeiDou_GFLC=rowfun(bds_gflc_func,obs.BeiDou,'InputVariables',{'L2X','L7X','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
         else
-            %             fprintf(['No BeiDou Observables recognized for station ' obs_header.MarkerName(1:4) '[L2I.L6I - L2X.L6X]\n'])
             BeiDou_GFLC=[];
         end
 
@@ -307,26 +297,5 @@ PrToTec = 1/40.308*(L1^2*L2^2)/(L1^2-L2^2)/1e16;
 GFLC = (phase1 * lambdaL1 - phase2 * lambdaL2) * PrToTec;
 
 prn=string(['S' num2str(prn,'%.02d')]);
-
-end
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%% PHASE JUMPS CORRECTOR %%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function phase_out = PhaseJumpsCorrector(phase_in, std_max)
-
-phdiff = diff(phase_in);
-phstd = std(phdiff);
-idx = find(abs(phdiff) > phstd * std_max | abs(phdiff)>0.25); %check if phase jump is higher than std_max*std or higher than 0.5 TECu
-idx1 = [idx; numel(phase_in)];
-
-for xx = 1:numel(idx1)-1
-    phx = phase_in(idx1(xx)) - phase_in(idx1(xx) + 1);
-    phase_in(idx1(xx)+1 : idx1(xx+1)) = phase_in(idx1(xx) + 1:idx1(xx + 1)) + phx;
-end
-
-phase_out = phase_in;
 
 end

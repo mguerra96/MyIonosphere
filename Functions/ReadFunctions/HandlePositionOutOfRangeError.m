@@ -1,5 +1,7 @@
 function HandlePositionOutOfRangeError(obs_file)
 
+% function that removes the lines with "PRN / # OF OBS" that cause a reading error 
+
 fclose('all');
 
 obs_file_dir=[obs_file.folder '\' obs_file.name];

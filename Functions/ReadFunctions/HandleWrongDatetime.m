@@ -1,5 +1,7 @@
 function HandleWrongDatetime(obs_file)
 
+%function that modifies the format of date in the PGM / RUN BY / DATE that causes a reading error 
+
 fclose('all');
 
 obs_file_dir=[obs_file.folder '\' obs_file.name];

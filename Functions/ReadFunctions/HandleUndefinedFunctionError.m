@@ -1,5 +1,7 @@
 function HandleUndefinedFunctionError(obs_file)
 
+%function that removes the "SYS / PHASE SHIFT" from header when it caused the issuing of a reading error
+
 fclose('all');
 
 obs_file_dir=[obs_file.folder '\' obs_file.name];

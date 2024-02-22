@@ -1,5 +1,7 @@
 function BDSNav=prepare_BDS(nav)
 
+%prepare BeiDou ephemeris for the SatellitePosition function
+
 BDSNav=struct();
 
 for sat=1:60

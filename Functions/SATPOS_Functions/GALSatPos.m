@@ -1,5 +1,7 @@
 function GALPos=GALSatPos(nav,ts)
 
+%utility function that calculates the Galileo satpos for each satellite and merge them into single table
+
 [GPSweek,GPSsec] = greg2gps([year(ts) month(ts) day(ts) hour(ts) minute(ts) second(ts)]);
 
 GALPos=[];

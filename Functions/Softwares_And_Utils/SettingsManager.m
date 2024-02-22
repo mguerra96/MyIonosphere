@@ -1,15 +1,17 @@
 function [t_res,HIPP,Elevation_Cutoff,GNSS_Systems,ToCalibrate,ToVertical,MinArcLength]=SettingsManager(MyIonoSettings)
 
+%function that handles the non madnatory settings and if they are not provided assigns default values
+
 if ~isfield(MyIonoSettings,'TimeResolution')
     t_res=30;
 else
     t_res=MyIonoSettings.TimeResolution;
 end
 
-if ~isfield(MyIonoSettings,'IonoShellHeight')
+if ~isfield(MyIonoSettings,'HIPP')
     HIPP=250;
 else
-    HIPP=MyIonoSettings.IonoShellHeight;
+    HIPP=MyIonoSettings.HIPP;
 end
 
 if ~isfield(MyIonoSettings,'ElevationCutoff')
@@ -40,4 +42,7 @@ if ~isfield(MyIonoSettings,'MinArcLength')
     MinArcLength=3600/t_res;
 else
     MinArcLength=MyIonoSettings.MinArcLength/t_res;
+end
+
+
 end

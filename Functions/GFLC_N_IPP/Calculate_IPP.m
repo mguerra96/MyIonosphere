@@ -1,5 +1,7 @@
 function [lat,lon,azi,ele]=Calculate_IPP(rec_pos,sat_pos1,sat_pos2,sat_pos3,HIPP)
 
+% Function that calculates the IPP location given the receiver ECEF position, the list of ECEF coordinates of the satellite and the ionospheric shell height
+
 Re = 6371000;
 r = HIPP*1000 + Re ;
 xA = rec_pos(1);
@@ -38,11 +40,11 @@ else
     z_ipp = 0;
 end
 
-lla=ecef2lla([x_ipp , y_ipp , z_ipp]);
+lla=ecef2lla([x_ipp , y_ipp , z_ipp]);  %convert IPP ECEF coordinates to LLA ones
 
 lat=lla(1);
 lon=lla(2);
 
-[azi,ele,~]=lookangles(ecef2lla(rec_pos),[sat_pos1 sat_pos2 sat_pos3]);
+[azi,ele,~]=lookangles(ecef2lla(rec_pos),[sat_pos1 sat_pos2 sat_pos3]); %obtain azimuth and elevation of satellite given SATPOS and receiver location
 
 end

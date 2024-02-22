@@ -1,5 +1,8 @@
 function HandleDuplicateName(obs_file)
 
+% Handle the error caused by two observables having the same name (usually happens for Japanase system)
+% the second iteration of the name of the same observables is changed to x0x 
+
 fclose('all');
 
 obs_file_dir=[obs_file.folder '\' obs_file.name];
