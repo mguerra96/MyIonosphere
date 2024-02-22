@@ -6,8 +6,8 @@ function [CleanOutputs , Statistics]=MyIonosphere(MyIonoSettings)
 % MANDATORY INPTUS ARE:
 % StartTime         (datetime)          ---> start_time in datetime format
 % StopTime          (datetime)          ---> stop_time in datetime format
-% RinexDir          (system path)       ---> Path to directory were obs files are stored  
-% 
+% RinexDir          (system path)       ---> Path to directory were obs files are stored
+%
 % NON MANDATORY INPUTS ARE:
 % TimeResolution    (seconds)           ---> Time resolution of rinex observational files
 % HIPP              (km)                ---> Height of the ionospheric layer for the calculation of the iono piercing point
@@ -16,7 +16,7 @@ function [CleanOutputs , Statistics]=MyIonosphere(MyIonoSettings)
 % ToCalibrate       (1 or 0)            ---> If true calibration bias is estimated through NeQuick
 % MinArcLength      (seconds)           ---> If GNSS TEC arc is shorter than MinArcLength the arc is discarded
 % ToVertical        (1 or 0)            ---> If true the arcs are verticalized
-% 
+%
 %
 % Written by Marco Guerra
 
@@ -152,7 +152,8 @@ fprintf('CREATING DATAFRAME WITH OBSERVATIONAL ARCS...\n')
 CleanOutputs=vertcat(CleanOutputs{:});  %merge all data into one single table to easy further computations
 CleanOutputs.ArcID=strcat(CleanOutputs.stat,"_",CleanOutputs.prn);  %create 1 unique ID for each receiver-satellite pair
 CleanOutputs=CleanOutputs(CleanOutputs.ele>=Elevation_Cutoff,:);    %remove data that are at elevations lower than the treshold
-
+Statistics.TimeNeeded.ToTable=toc(StepTicTime);
+StepTicTime=tic;
 
 % CREATION OF ID OF SINGLE ARCS TO ALLOW OPEARTION ON ARCS
 
@@ -164,14 +165,16 @@ CleanOutputs.ArcID=strcat(CleanOutputs.ArcID,"_",ArcIDNum.ArcIDNum);
 CleanOutputs=removevars(CleanOutputs,{'stat','prn'});
 CleanOutputs.Properties.VariableNames={'Time','GFLC','Lat','Lon','Azi','Ele','ArcID'};
 CleanOutputs=sortrows(CleanOutputs,{'ArcID','Time'});
-
+Statistics.TimeNeeded.ArcID=toc(StepTicTime);
+StepTicTime=tic;
 
 % DROP ARCS THAT ARE TOO SHORT
 
 IDCounts=groupcounts(CleanOutputs,'ArcID');
 Arc2Delete=IDCounts(IDCounts.GroupCount<MinArcLength,:);
 CleanOutputs=CleanOutputs(~contains(CleanOutputs.ArcID,Arc2Delete.ArcID),:);
-
+Statistics.TimeNeeded.CleanShortArcs=toc(StepTicTime);
+StepTicTime=tic;
 
 % CORRECTION OF PHASE JUMPS TO AVOID DETRENDING OUTLIERS
 
@@ -181,10 +184,9 @@ GFLC_Corrected=rowfun(PhaseJumpsCorrector_f,CleanOutputs,"GroupingVariables","Ar
 GFLC_Corrected=sortrows(GFLC_Corrected,{'ArcID','Time'});
 CleanOutputs.GFLC=GFLC_Corrected.GFLC;
 Calibrated=false;
-Statistics.TimeNeeded.PostProcessingB4NeQuick=toc(StepTicTime);
+
+Statistics.TimeNeeded.PhaseJumps=toc(StepTicTime);
 StepTicTime=tic;
-
-
 
 % CALIBRATION WITH NeQuick2 TO REDUCE DETRENING ERRORS ON AMPLITUDE
 
@@ -195,6 +197,8 @@ if ToCalibrate
     CleanOutputs.sTEC=sTEC.sTEC;
     CleanOutputs=CleanOutputs(~isnan(CleanOutputs.sTEC),:);
     Calibrated=true;
+    Statistics.TimeNeeded.NeQuickCalibration=toc(StepTicTime);
+    StepTicTime=tic;
 end
 
 
@@ -202,18 +206,18 @@ end
 
 if ToVertical
     vert_f=@(vtec,ele) Verticalization(vtec,ele,HIPP);      %initialize functions that verticalizes the observational arcs
-   if Calibrated
+    if Calibrated
         vTEC=rowfun(vert_f,CleanOutputs,"GroupingVariables","ArcID","InputVariables",{'sTEC','Ele'},"OutputVariableNames","vTEC");
         CleanOutputs.vTEC=vTEC.vTEC;    %if tec was calibrated with NeQuick sTEC is verticalized
-        Statistics.TimeNeeded.NeQuickCalibration=toc(StepTicTime);
+        Statistics.TimeNeeded.Verticalization=toc(StepTicTime);
         CleanOutputs.GFLC=[]; %Delete useless data to save space
-        CleanOutputs.sTEC=[]; %Delete useless data to save space  
-   else    
+        CleanOutputs.sTEC=[]; %Delete useless data to save space
+    else
         vTEC=rowfun(vert_f,CleanOutputs,"GroupingVariables","ArcID","InputVariables",{'GFLC','Ele'},"OutputVariableNames","vTEC");
         CleanOutputs.vTEC=vTEC.vTEC;    % if TEC was not calibrated the GFLC at 0 mean is verticalized (the 0 mean should reduce verticalization errors)
-        Statistics.TimeNeeded.NeQuickCalibration=toc(StepTicTime);
-        CleanOutputs.GFLC=[]; %Delete useless data to save space  
-   end
+        Statistics.TimeNeeded.Verticalization=toc(StepTicTime);
+        CleanOutputs.GFLC=[]; %Delete useless data to save space
+    end
 end
 
 if ~exist([DB_Dir '\Outputs'],'dir')

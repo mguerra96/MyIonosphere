@@ -77,12 +77,11 @@ end
 
 obsBuffer=cell(1,ceil(numOfObs/5)); %initialize cell that contains lines of observables
 
-for lineNum=1:ceil(numOfObs/5)  %every 5 observables per single satellite the list goes to a new line
+for lineNum=1:ceil(numOfObs/5)  %every 5 observables p
     obsBuffer{lineNum}=observablesBuffer_mat(lineNum:ceil(numOfObs/5):end,:);
 end
 
-    
-for obsNum=1:numOfObs   %assign values to observables found in obslist (every 16 char is 1 observables, after 80 go to new line)
+for obsNum=1:numOfObs
     lineNum=ceil(obsNum/5);
     charPos = ((obsNum -(lineNum - 1)*5)-1)*16 + 1;
     obs=obsBuffer{lineNum}(:,charPos:charPos+13);
@@ -94,7 +93,7 @@ temp_tab.prn(:)=nan;
 temp_tab.prn=char(temp_tab.SatelliteID);
 temp_tab.SatelliteID=temp_tab.prn(:,2:3);
 
-obs=struct();   %initialize and then create data structure with fields corresponding to GNSS constellations
+obs=struct();
 
 obs.GPS=table2timetable(temp_tab(contains(string(temp_tab.prn),"G"),:));
 obs.GLONASS=table2timetable(temp_tab(contains(string(temp_tab.prn),"R"),:));
