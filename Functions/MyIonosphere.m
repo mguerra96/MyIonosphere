@@ -230,9 +230,11 @@ Statistics.TimeNeeded.Total=toc(StartTicTime);
 Statistics.NumOfOutOfTime=sum(Outputs_key==0);
 Statistics.NumOfFiles=length(Outputs_key);
 
+Outputs=CleanOutputs;
+clear CleanOutputs
 
 % SAVE STATISTICS AND OUTPUTS IN .MAT FORMAT IN THE OUTPUT FOLDER
 save([DB_Dir '.\Outputs\' datestr(ts,'ddmmyy@hhMM') '_' datestr(te,'ddmmyy@hhMM') '_Stats.mat'],'Statistics');
-save([DB_Dir '.\Outputs\' datestr(ts,'ddmmyy@hhMM') '_' datestr(te,'ddmmyy@hhMM') '_Data.mat'],'CleanOutputs','-v7.3');
+save([DB_Dir '.\Outputs\' datestr(ts,'ddmmyy@hhMM') '_' datestr(te,'ddmmyy@hhMM') '_Data.mat'],'Outputs','-v7.3');
 
 end
