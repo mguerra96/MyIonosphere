@@ -3,14 +3,19 @@ function [obs, obs_header]=MyRinexRead(obs_file)
 %Function that identifies Rinex version and read obs files
 % this functions also checks for read errors and modifies obs files to ensure that they are readable
 
-obs_file_dir=[obs_file.folder '\' obs_file.name];
+obs_file_dir=[obs_file.folder '/' obs_file.name];
 
 version=VersionFinder(obs_file_dir);
+
+NumOfTries=1;
+
+while NumOfTries<=3
 
 try
 
     switch version(1)
         case '2'
+            NumOfTries=4;
             [obs, obs_header]=my_rinexread2(obs_file_dir);
         case '3'
             [obs, obs_header]=my_rinexread3(obs_file_dir);
@@ -19,6 +24,8 @@ try
         otherwise
             fprintf('RINEX Version not recognized!\n')
     end
+     
+    NumOfTries=4;
 
 catch ME
 
@@ -43,17 +50,8 @@ catch ME
         HandleUndefinedFunctionError(obs_file);     % Remove the "SYS / PHASE SHIFT" line from rinex to avoid the reading error
 
     end
-
-    switch version(1)   % if the first iteration of readrinex files failed, a second try is done after handling the obs file error (if two errors are present, the reading proces fails)
-        case '2'
-            [obs, obs_header]=my_rinexread2(obs_file_dir);
-        case '3'
-            [obs, obs_header]=my_rinexread3(obs_file_dir);
-        case '4'
-            fprintf('RINEX V4.xx Not yet supported\n')
-        otherwise
-            fprintf('RINEX Version not recognized!\n')
-    end
+    
+    NumOfTries=NumOfTries+1;
 
 end
 

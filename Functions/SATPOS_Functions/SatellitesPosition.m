@@ -2,7 +2,7 @@ function [SATPOS,FrequencyNumber]=SatellitesPosition(t_res,dt1,DB_Dir,GNSS_Syste
 
 %function that calculates all the satellites positions for the given GNSS systems, for the given time at the given time resolution
 
-nav_files=dir([DB_Dir '\nav\*.rnx']);
+nav_files=dir([DB_Dir '/nav/*.rnx']);
 
 dt2 = unique(dateshift(dt1, 'start', 'day'));
 
@@ -24,7 +24,7 @@ for iNavFile=1:length(nav_files) %iterate over navigational files
 
     if sum(dt2==datetime(doy2jd(year,doy),'ConvertFrom','juliandate'))==1 %check that given nav file is related to requested time period
 
-        nav=rinexread([nav_files(iNavFile).folder '\' nav_files(iNavFile).name]);   %read navigational rinex
+        nav=rinexread([nav_files(iNavFile).folder '/' nav_files(iNavFile).name]);   %read navigational rinex
         FrequencyNumber_Temp=unique(table(nav.GLONASS.SatelliteID,nav.GLONASS.FrequencyNumber,'VariableNames',{'prn','freqn'}),'rows'); %extract GLONASS satellit frequency shift
         [~,repeatedRows]=unique(FrequencyNumber_Temp.prn);
         FrequencyNumber.(datestr(datetime(doy2jd(year,doy),'ConvertFrom','juliandate'),'mmmddyyyy'))=FrequencyNumber_Temp(repeatedRows,:);  %save daily GLONASS freq number

@@ -41,7 +41,7 @@ end
 
 [t_res,HIPP,Elevation_Cutoff,GNSS_Systems,ToCalibrate,ToVertical,MinArcLength]=SettingsManager(MyIonoSettings);
 
-NumOfThreads=4;
+
 
 StartTicTime=tic;
 StepTicTime=tic;
@@ -69,12 +69,11 @@ StepTicTime=tic;
 
 if t_res==30
     Unzip_And_DeHata(DB_Dir)        % if obs files are zipped this function unzips them
-    NumOfThreads=10;
 end
 
 % READING RINEX OBS FILES AND MERGING OBSERVATIONS WITH SATELLITE POSITIONS
 
-obs_files=[dir([DB_Dir '/obs/*.rnx']) ; dir([DB_Dir '/obs/*.*o'])];
+obs_files=[dir([DB_Dir '\obs\*.rnx']) ; dir([DB_Dir '\obs\*.*o'])];
 
 if isempty(obs_files)
     fprintf('ERROR: No observational files for given time period\n')
@@ -84,17 +83,15 @@ end
 Outputs=cell(size(obs_files));
 Outputs_key=zeros(size(obs_files));
 
-if ~exist([DB_Dir '/Errors/' datestr(ts,'dd_mm_yy')],'dir')
-    mkdir([DB_Dir '/Errors/' datestr(ts,'dd_mm_yy')])
+if ~exist([DB_Dir '\Errors\' datestr(ts,'dd_mm_yy')],'dir')
+    mkdir([DB_Dir '\Errors\' datestr(ts,'dd_mm_yy')])
 end
 
 fprintf('READING RINEX FILES...\n')
 
 WaitMessage = parfor_wait(length(obs_files), 'Waitbar', true);
 
-% parfor (fileIdx=1:size(obs_files,1),NumOfThreads)
-for fileIdx=1:size(obs_files,1)
-
+parfor fileIdx=1:size(obs_files,1)
     obs_file=obs_files(fileIdx);
 
     try
@@ -105,10 +102,10 @@ for fileIdx=1:size(obs_files,1)
         fprintf(['Error loading obs file: ' obs_file.name '\n']);
         Outputs{fileIdx}={ME obs_file.name};
         Outputs_key(fileIdx,1)=-1;
-        if ~exist([DB_Dir '/Errors'],'dir')
-            mkdir([DB_Dir '/Errors'])
+        if ~exist([DB_Dir '\Errors'],'dir')
+            mkdir([DB_Dir '\Errors'])
         end
-        movefile([obs_file.folder '/' obs_file.name],[DB_Dir  '/Errors/' datestr(ts,'dd_mm_yy') '/' obs_file.name],'f');
+        movefile([obs_file.folder '\' obs_file.name],[DB_Dir  '\Errors\' datestr(ts,'dd_mm_yy') '\' obs_file.name],'f');
     end
 
 
@@ -121,10 +118,10 @@ for fileIdx=1:size(obs_files,1)
             fprintf(['Error computing GFLC for file: ' obs_file.name '\n']);
             Outputs{fileIdx}={ME obs_file.name};
             Outputs_key(fileIdx,1)=-1;
-            if ~exist([DB_Dir '/Errors'],'dir')
-                mkdir([DB_Dir '/Errors'])
+            if ~exist([DB_Dir '\Errors'],'dir')
+                mkdir([DB_Dir '\Errors'])
             end
-            movefile([obs_file.folder '/' obs_file.name],[DB_Dir '/Errors/'  datestr(ts,'dd_mm_yy') '/' obs_file.name],'f');
+            movefile([obs_file.folder '\' obs_file.name],[DB_Dir '\Errors\'  datestr(ts,'dd_mm_yy') '\' obs_file.name],'f');
         end
 
     end
@@ -233,8 +230,8 @@ if ToVertical
     end
 end
 
-if ~exist([DB_Dir '/Outputs'],'dir')
-    mkdir([DB_Dir '/Outputs'])
+if ~exist([DB_Dir '\Outputs'],'dir')
+    mkdir([DB_Dir '\Outputs'])
 end
 
 
@@ -246,10 +243,8 @@ Statistics.NumOfFiles=length(Outputs_key);
 Outputs=CleanOutputs;
 clear CleanOutputs
 
-fprintf('SAVING OUTPUTS...\n')
-
 % SAVE STATISTICS AND OUTPUTS IN .MAT FORMAT IN THE OUTPUT FOLDER
-save([DB_Dir './Outputs/' datestr(ts,'ddmmyy@hhMM') '_' datestr(te,'ddmmyy@hhMM') '_Stats.mat'],'Statistics');
-save([DB_Dir './Outputs/' datestr(ts,'ddmmyy@hhMM') '_' datestr(te,'ddmmyy@hhMM') '_Data.mat'],'Outputs','-v7.3');
+save([DB_Dir '.\Outputs\' datestr(ts,'ddmmyy@hhMM') '_' datestr(te,'ddmmyy@hhMM') '_Stats.mat'],'Statistics');
+save([DB_Dir '.\Outputs\' datestr(ts,'ddmmyy@hhMM') '_' datestr(te,'ddmmyy@hhMM') '_Data.mat'],'Outputs','-v7.3');
 
 end

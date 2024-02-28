@@ -8,13 +8,13 @@ init_dir=pwd;
 year=num2str(year);
 doy=num2str(doy,'%03d');
 
-Nav_Dir=[DB_Dir '\nav'];
+Nav_Dir=[DB_Dir '/nav'];
 
 if ~exist(Nav_Dir)
     mkdir(Nav_Dir)
 end
 
-if ~isempty(dir([Nav_Dir '\*' year doy '*.rnx']))
+if ~isempty(dir([Nav_Dir '/*' year doy '*.rnx']))
     return
 end
 
@@ -31,14 +31,14 @@ end
 close(aux_ftp)
 
 Unzipper_Path=char(mlreportgen.utils.findFile('7za.exe'));
-copyfile(Unzipper_Path,[ Nav_Dir '\7za.exe'])
+copyfile(Unzipper_Path,[ Nav_Dir '/7za.exe'])
 
-to_unzip=dir([Nav_Dir '\*.gz']);
+to_unzip=dir([Nav_Dir '/*.gz']);
 
 cd(Nav_Dir)
 
 for i=1:length(to_unzip)
-    [~,~]=system(['7za e ' to_unzip(i).folder '\' to_unzip(i).name]);
+    [~,~]=system(['7za e ' to_unzip(i).folder '/' to_unzip(i).name]);
 end
 
 delete('*.gz')

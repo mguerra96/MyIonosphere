@@ -6,9 +6,9 @@ function Unzip_And_DeHata(DB_Dir)
 init_dir=pwd;
 
 Unzipper_Path=char(mlreportgen.utils.findFile('7za.exe')); %find path to 7za
-copyfile(Unzipper_Path,[ DB_Dir '\obs\7za.exe']) %copy 7za to obs folder
+copyfile(Unzipper_Path,[ DB_Dir '/obs/7za.exe']) %copy 7za to obs folder
 
-cd([DB_Dir '\obs']);
+cd([DB_Dir '/obs']);
 
 files2unzip=[dir('*.gz') ; dir('*.Z') ; dir('*.z') ; dir('*.tar') ; dir('*.rar')]; %get list of files to unzip
 
@@ -23,7 +23,7 @@ end
 delete 7za.exe
 
 DeHata_Path=char(mlreportgen.utils.findFile('crx2rnx.exe')); %find path to crx2rnx
-copyfile(DeHata_Path,[ DB_Dir '\obs\crx2rnx.exe'])  %copy crx2rnx to to obs dir
+copyfile(DeHata_Path,[ DB_Dir '/obs/crx2rnx.exe'])  %copy crx2rnx to to obs dir
 
 files2dehata=[dir('*.crx') ; dir('*.*d') ; dir('*.*D')];
 

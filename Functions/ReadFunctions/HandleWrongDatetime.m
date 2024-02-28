@@ -4,7 +4,7 @@ function HandleWrongDatetime(obs_file)
 
 fclose('all');
 
-obs_file_dir=[obs_file.folder '\' obs_file.name];
+obs_file_dir=[obs_file.folder '/' obs_file.name];
 
 finp = fopen(obs_file_dir,'r');
 
@@ -39,10 +39,10 @@ delete(obs_file_dir)
 
 TempNewName=obs_file.name(1:end-4);
 
-writecell(fileBuffer,[obs_file.folder '\' TempNewName '.txt']);
+writecell(fileBuffer,[obs_file.folder '/' TempNewName '.txt']);
 
 fclose('all');
-movefile([obs_file.folder '\' TempNewName '.txt'],[obs_file.folder '\' TempNewName obs_file.name(end-3:end)])
+movefile([obs_file.folder '/' TempNewName '.txt'],[obs_file.folder '/' TempNewName obs_file.name(end-3:end)])
 
 end
 

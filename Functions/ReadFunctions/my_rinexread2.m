@@ -8,12 +8,16 @@ fclose(finp);
 
 fileBuffer = fileBuffer{1};
 
+headerSize=find(contains(fileBuffer,"END OF HEADER")); %find length of header in rinex file
+
+HeaderBuffer=fileBuffer(1:headerSize);
+
 % Exctract necessary data from header of obs file
-MarkerName=fileBuffer{contains(fileBuffer,"MARKER NAME")}(1:4);
-approxPosition=split(fileBuffer{contains(fileBuffer,"APPROX POSITION")});
-obsTypes_Mat=char(fileBuffer(contains(fileBuffer,"TYPES OF OBSERV")));
-FileVersion=split(fileBuffer{contains(fileBuffer,"RINEX VERSION")});
-TimeOfFirstObs=split(fileBuffer{contains(fileBuffer,"TIME OF FIRST OBS")});
+MarkerName=HeaderBuffer{contains(HeaderBuffer,"MARKER NAME") & ~contains(HeaderBuffer,"COMMENT")}(1:4);
+approxPosition=split(HeaderBuffer{contains(HeaderBuffer,"APPROX POSITION")});
+obsTypes_Mat=char(HeaderBuffer(contains(HeaderBuffer,"TYPES OF OBSERV")));
+FileVersion=split(HeaderBuffer{contains(HeaderBuffer,"RINEX VERSION")});
+TimeOfFirstObs=split(HeaderBuffer{contains(HeaderBuffer,"TIME OF FIRST OBS")});
 FirstObsTime=datetime(my_str2num(TimeOfFirstObs{2}),my_str2num(TimeOfFirstObs{3}),my_str2num(TimeOfFirstObs{4}),my_str2num(TimeOfFirstObs{5}),my_str2num(TimeOfFirstObs{6}),my_str2num(TimeOfFirstObs{7}));
 
 obs_header.ApproxPosition=[my_str2num(approxPosition{2}) my_str2num(approxPosition{3}) my_str2num(approxPosition{4})];
@@ -21,7 +25,7 @@ obs_header.FileVersion=my_str2num(FileVersion{2});
 obs_header.FirstObsTime=FirstObsTime;
 obs_header.MarkerName=MarkerName;
 
-headerSize=find(contains(fileBuffer,"END OF HEADER")); %find length of header in rinex file
+
 
 % indentify number and name of observables present in rinex file
 numOfObs=str2double(obsTypes_Mat(1,5:6));
@@ -44,7 +48,7 @@ if length(lines_to_del)==length(post_header_comments_lines)*2 || ...
     BodyBuffer_Mat(post_header_comments_lines,:)=[]; %Delete the line before RINEX FILE SPLICE
 end
 
-comment_lines=contains(string(BodyBuffer_Mat(:,:)),'COMMENT'); %Find comment lines
+comment_lines=contains(string(BodyBuffer_Mat(:,:)),'COMMENT') | contains(string(BodyBuffer_Mat(:,:)),'APPROX POSITION XYZ'); %Find comment lines
 useless_time_lines=string(BodyBuffer_Mat(:,2:3))==string(obs_file_dir(end-2:end-1)) & string(BodyBuffer_Mat(:,29))~="0"; %find useless time lines, when no obs are present
 
 BodyBuffer_Mat=BodyBuffer_Mat(~comment_lines & ~useless_time_lines,:); %remove useless lines from obs section of rinex file
