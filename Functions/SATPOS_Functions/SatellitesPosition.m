@@ -14,6 +14,8 @@ SATPOS.BeiDou=[];
 SATPOS.Galileo=[];
 SATPOS.GLONASS=[];
 SATPOS.SBAS=[];
+SATPOS.QZSS=[];
+SATPOS.NavIC=[];
 
 NavSBAS=[];
 
@@ -47,6 +49,14 @@ for iNavFile=1:length(nav_files) %iterate over navigational files
             SATPOS.GLONASS=[SATPOS.GLONASS ; GLOSatPos(nav,dt',t_res)];  %Calcuate GLONASS positions
         end
 
+        if sum(contains(GNSS_Systems,"I"))
+            SATPOS.NavIC=[SATPOS.NavIC ; NavICSatPos(nav,dt')];  %Calcuate GLONASS positions
+        end
+
+        if sum(contains(GNSS_Systems,"J"))
+            SATPOS.QZSS=[SATPOS.QZSS ; QZSSSatPos(nav,dt')];  %Calcuate GLONASS positions
+        end
+
         if sum(contains(GNSS_Systems,"S"))
             NavSBAS=[NavSBAS ; nav.SBAS];    %Calcuate SBAS positions
         end
@@ -74,7 +84,7 @@ if sum(contains(GNSS_Systems,"S"))  %check that SBAS ECEF positions are in the r
         SatIDPos.Properties.VariableNames={'x','y','z','prn'};
         SATPOS.SBAS=[SATPOS.SBAS ; SatIDPos];
     end
-    
+
 end
 
 end

@@ -4,7 +4,7 @@ function BDSNav=prepare_BDS(nav)
 
 BDSNav=struct();
 
-for sat=1:60
+for sat=unique(nav.BeiDou.SatelliteID)
 
 ephe=nav.BeiDou(nav.BeiDou.SatelliteID==sat,:);
 

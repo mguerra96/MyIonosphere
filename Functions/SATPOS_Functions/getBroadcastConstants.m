@@ -37,4 +37,5 @@ switch satsys
         const.wE  = 7.292115e-5;
         const.a   = 6378137;
         const.f   =  1/298.257222101;
+
 end

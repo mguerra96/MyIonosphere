@@ -4,7 +4,7 @@ function GALNav=prepare_GAL(nav)
 
 GALNav=struct();
 
-for sat=1:40
+for sat=unique(nav.Galileo.SatelliteID)
 
 ephe=nav.Galileo(nav.Galileo.SatelliteID==sat,:);
 

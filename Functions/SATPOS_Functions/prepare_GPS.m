@@ -4,7 +4,7 @@ function GPSNav=prepare_GPS(nav)
 
 GPSNav=struct();
 
-for sat=1:40
+for sat=unique(nav.GPS.SatelliteID)
 
 ephe=nav.GPS(nav.GPS.SatelliteID==sat,:);
 
