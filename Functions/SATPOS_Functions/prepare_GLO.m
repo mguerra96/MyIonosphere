@@ -4,7 +4,7 @@ function GLONav=prepare_GLO(nav)
 
 GLONav=struct();
 
-for sat=unique(nav.GLONASS.SatelliteID)
+for sat=unique(nav.GLONASS.SatelliteID)'
 
 ephes=nav.GLONASS(nav.GLONASS.SatelliteID==sat,:);
 

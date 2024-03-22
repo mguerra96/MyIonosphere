@@ -41,7 +41,7 @@ end
 
 [t_res,HIPP,Elevation_Cutoff,GNSS_Systems,ToCalibrate,ToVertical,MinArcLength]=SettingsManager(MyIonoSettings);
 
-NumOfThreads=4;
+NumOfThreads=10;
 
 StartTicTime=tic;
 StepTicTime=tic;
@@ -51,7 +51,8 @@ Statistics.TimeNeeded=struct();
 dt=ts:seconds(t_res):te;               %initalize times for SATPOS calculation
 doys=unique(floor(date2doy(datenum(dt))));
 yy=year(ts);
-
+yy_string=char(string(yy));
+yy_string=string(yy_string(3:4));
 
 % DOWLOADING NEEDED BRDC FILES AND CALCULATING SATELLITE POSITIONS
 
@@ -69,7 +70,7 @@ StepTicTime=tic;
 
 if t_res==30
     Unzip_And_DeHata(DB_Dir)        % if obs files are zipped this function unzips them
-    NumOfThreads=10;
+    NumOfThreads=8;
 end
 
 % READING RINEX OBS FILES AND MERGING OBSERVATIONS WITH SATELLITE POSITIONS
@@ -84,10 +85,6 @@ end
 Outputs=cell(size(obs_files));
 Outputs_key=zeros(size(obs_files));
 
-if ~exist([DB_Dir '/Errors/' datestr(ts,'dd_mm_yy')],'dir')
-    mkdir([DB_Dir '/Errors/' datestr(ts,'dd_mm_yy')])
-end
-
 fprintf('READING RINEX FILES...\n')
 
 WaitMessage = parfor_wait(length(obs_files), 'Waitbar', true);
@@ -97,6 +94,10 @@ for fileIdx=1:size(obs_files,1)
 
     obs_file=obs_files(fileIdx);
 
+    if  ~contains(obs_file.name,string(doys)) || ~contains(obs_file.name,yy_string)
+        continue
+    end
+
     try
         [obs, obs_header]=MyRinexRead(obs_file); %read obs files and manage possible errors
     catch ME    %catch reading error and save error type along with faulty rinex
@@ -105,14 +106,14 @@ for fileIdx=1:size(obs_files,1)
         fprintf(['Error loading obs file: ' obs_file.name '\n']);
         Outputs{fileIdx}={ME obs_file.name};
         Outputs_key(fileIdx,1)=-1;
-        if ~exist([DB_Dir '/Errors'],'dir')
-            mkdir([DB_Dir '/Errors'])
+        if ~exist([DB_Dir '/Errors/' datestr(ts,'yy_mm_dd')],'dir')
+            mkdir([DB_Dir '/Errors/' datestr(ts,'yy_mm_dd')])
         end
-        movefile([obs_file.folder '/' obs_file.name],[DB_Dir  '/Errors/' datestr(ts,'dd_mm_yy') '/' obs_file.name],'f');
+        movefile([obs_file.folder '/' obs_file.name],[DB_Dir  '/Errors/' datestr(ts,'yy_mm_dd') '/' obs_file.name],'f');
     end
 
 
-    if ~isempty(obs) && year(obs_header.FirstObsTime)==yy && sum(floor(date2doy(datenum(obs_header.FirstObsTime)))==doys)>0
+    if ~isempty(obs)
         try
             Outputs{fileIdx}=MergeObsSatPos(SATPOS,Compute_GFLC(obs,obs_header,FrequencyNumber.(datestr(obs_header.FirstObsTime,'mmmddyyyy')),GNSS_Systems),obs_header,HIPP); %merge satpos and GFLC data and calculates IPPs
             Outputs{fileIdx}.stat(:)=string(obs_header.MarkerName(1:4));
@@ -121,10 +122,10 @@ for fileIdx=1:size(obs_files,1)
             fprintf(['Error computing GFLC for file: ' obs_file.name '\n']);
             Outputs{fileIdx}={ME obs_file.name};
             Outputs_key(fileIdx,1)=-1;
-            if ~exist([DB_Dir '/Errors'],'dir')
-                mkdir([DB_Dir '/Errors'])
+            if ~exist([DB_Dir '/Errors/' datestr(ts,'yy_mm_dd')],'dir')
+                mkdir([DB_Dir '/Errors/' datestr(ts,'yy_mm_dd')])
             end
-            movefile([obs_file.folder '/' obs_file.name],[DB_Dir '/Errors/'  datestr(ts,'dd_mm_yy') '/' obs_file.name],'f');
+            movefile([obs_file.folder '/' obs_file.name],[DB_Dir '/Errors/'  datestr(ts,'yy_mm_dd') '/' obs_file.name],'f');
         end
 
     end
@@ -175,10 +176,12 @@ StepTicTime=tic;
 
 % DROP ARCS THAT ARE TOO SHORT
 
+tic
 fprintf('DROPPING ARCS THAT ARE TOO SHORT...\n')
 IDCounts=groupcounts(CleanOutputs,'ArcID');
 Arc2Delete=IDCounts(IDCounts.GroupCount<MinArcLength,:);
 CleanOutputs=CleanOutputs(~contains(CleanOutputs.ArcID,Arc2Delete.ArcID),:);
+toc
 
 Statistics.TimeNeeded.CleanShortArcs=toc(StepTicTime);
 StepTicTime=tic;
@@ -237,7 +240,6 @@ if ~exist([DB_Dir '/Outputs'],'dir')
     mkdir([DB_Dir '/Outputs'])
 end
 
-
 % CREATION OF THE STATISTICS STRUCT WITH REPORTS ON ELAPSED FILES
 Statistics.TimeNeeded.Total=toc(StartTicTime);
 Statistics.NumOfOutOfTime=sum(Outputs_key==0);
@@ -249,7 +251,7 @@ clear CleanOutputs
 fprintf('SAVING OUTPUTS...\n')
 
 % SAVE STATISTICS AND OUTPUTS IN .MAT FORMAT IN THE OUTPUT FOLDER
-save([DB_Dir './Outputs/' datestr(ts,'ddmmyy@hhMM') '_' datestr(te,'ddmmyy@hhMM') '_Stats.mat'],'Statistics');
-save([DB_Dir './Outputs/' datestr(ts,'ddmmyy@hhMM') '_' datestr(te,'ddmmyy@hhMM') '_Data.mat'],'Outputs','-v7.3');
+save([DB_Dir './Outputs/' datestr(ts,'yymmdd@hhMM') '_' datestr(te,'yymmdd@hhMM') '_Stats.mat'],'Statistics');
+save([DB_Dir './Outputs/' datestr(ts,'yymmdd@hhMM') '_' datestr(te,'yymmdd@hhMM') '_Data.mat'],'Outputs','-v7.3');
 
 end

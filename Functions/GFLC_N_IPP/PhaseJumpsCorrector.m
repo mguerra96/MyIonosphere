@@ -4,7 +4,7 @@ function [phase_out,time] = PhaseJumpsCorrector(phase_in, time, std_max)
 
 phdiff = diff(phase_in);
 phstd = std(phdiff);
-idx = find(abs(phdiff) > phstd * std_max | abs(phdiff)>.5); %phase junps are difened as junps bigger than std_max*std(diff(phase)) or bigger then 0.5 TECu
+idx = find(abs(phdiff) > phstd * std_max | abs(phdiff)>2); %phase junps are difened as junps bigger than std_max*std(diff(phase)) or bigger then 0.5 TECu
 idx1 = [idx; numel(phase_in)]; %find indexes of phase junp
 
 for xx = 1:numel(idx1)-1

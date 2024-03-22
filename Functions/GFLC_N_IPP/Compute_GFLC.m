@@ -69,17 +69,14 @@ switch floor(obs_header.FileVersion)
         end
 
         if sum(contains(GNSS_Systems,"R"))
+            glo_gflc_func=@(x,y,z) GLO_GFLC(x,y,z,FrequencyNumber);
             if isfield(obs,'GLONASS') && ~isempty(obs.GLONASS) && sum(ismember(obs.GLONASS.Properties.VariableNames,{'L1C','L2P'}))==2
-                glo_gflc_func=@(x,y,z) GLO_GFLC(x,y,z,FrequencyNumber);
                 GFLC.GLONASS=rowfun(glo_gflc_func,obs.GLONASS,'InputVariables',{'L1C','L2P','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
-            elseif isfield(obs,'GLONASS') && ~isempty(obs.GLONASS) && sum(ismember(obs.GLONASS.Properties.VariableNames,{'L1C','L2C'}))==2
-                glo_gflc_func=@(x,y,z) GLO_GFLC(x,y,z,FrequencyNumber);
+            elseif isfield(obs,'GLONASS') && ~isempty(obs.GLONASS) && sum(ismember(obs.GLONASS.Properties.VariableNames,{'L1C','L2C'}))==2           
                 GFLC.GLONASS=rowfun(glo_gflc_func,obs.GLONASS,'InputVariables',{'L1C','L2C','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
-            elseif isfield(obs,'GLONASS') && ~isempty(obs.GLONASS) && sum(ismember(obs.GLONASS.Properties.VariableNames,{'L1P','L2P'}))==2
-                glo_gflc_func=@(x,y,z) GLO_GFLC(x,y,z,FrequencyNumber);
+            elseif isfield(obs,'GLONASS') && ~isempty(obs.GLONASS) && sum(ismember(obs.GLONASS.Properties.VariableNames,{'L1P','L2P'}))==2         
                 GFLC.GLONASS=rowfun(glo_gflc_func,obs.GLONASS,'InputVariables',{'L1P','L2P','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
-            elseif isfield(obs,'GLONASS') && ~isempty(obs.GLONASS) && sum(ismember(obs.GLONASS.Properties.VariableNames,{'L1P','L2C'}))==2
-                glo_gflc_func=@(x,y,z) GLO_GFLC(x,y,z,FrequencyNumber);
+            elseif isfield(obs,'GLONASS') && ~isempty(obs.GLONASS) && sum(ismember(obs.GLONASS.Properties.VariableNames,{'L1P','L2C'}))==2        
                 GFLC.GLONASS=rowfun(glo_gflc_func,obs.GLONASS,'InputVariables',{'L1P','L2C','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
             end
         end

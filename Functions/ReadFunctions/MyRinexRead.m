@@ -18,7 +18,7 @@ try
             NumOfTries=4;
             [obs, obs_header]=my_rinexread2(obs_file_dir);
         case '3'
-            [obs, obs_header]=my_rinexread3(obs_file_dir);
+            [obs, obs_header]=my_rinexread3_old(obs_file_dir);
         case '4'
             fprintf('RINEX V4.xx Not yet supported\n')
         otherwise
