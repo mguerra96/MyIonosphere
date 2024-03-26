@@ -1,4 +1,4 @@
-function [t_res,HIPP,Elevation_Cutoff,GNSS_Systems,ToNeCalibrate,ToVertical,MinArcLength]=SettingsManager(MyIonoSettings)
+function [t_res,HIPP,Elevation_Cutoff,GNSS_Systems,ToNeCalibrate,ToGGCalibrate,ToVertical,MinArcLength]=SettingsManager(MyIonoSettings)
 
 %function that handles the non madnatory settings and if they are not provided assigns default values
 
@@ -30,6 +30,12 @@ if ~isfield(MyIonoSettings,'ToNeCalibrate')
     ToNeCalibrate=0;
 else
     ToNeCalibrate=MyIonoSettings.ToNeCalibrate;
+end
+
+if ~isfield(MyIonoSettings,'ToGGCalibrate')
+    ToGGCalibrate=0;
+else
+    ToGGCalibrate=MyIonoSettings.ToGGCalibrate;
 end
 
 if ~isfield(MyIonoSettings,'ToVertical')

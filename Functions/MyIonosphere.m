@@ -39,7 +39,7 @@ else
     return
 end
 
-[t_res,HIPP,Elevation_Cutoff,GNSS_Systems,ToNeCalibrate,ToVertical,MinArcLength]=SettingsManager(MyIonoSettings);
+[t_res,HIPP,Elevation_Cutoff,GNSS_Systems,ToNeCalibrate,ToGGCalibrate,ToVertical,MinArcLength]=SettingsManager(MyIonoSettings);
 
 NumOfThreads=10;
 
@@ -85,12 +85,15 @@ end
 Outputs=cell(size(obs_files));
 Outputs_key=zeros(size(obs_files));
 
+Station_Coord=table(string(zeros(size(obs_files))),zeros(size(obs_files)),zeros(size(obs_files)));
+Station_Coord.Properties.VariableNames={'StatName','StaLon','StaMoDip'};
+
 fprintf('READING RINEX FILES...\n')
 
 WaitMessage = parfor_wait(length(obs_files), 'Waitbar', true);
 
-% parfor (fileIdx=1:size(obs_files,1),NumOfThreads)
-for fileIdx=1:size(obs_files,1)
+parfor (fileIdx=1:size(obs_files,1),NumOfThreads)
+% for fileIdx=1:size(obs_files,1)
 
     obs_file=obs_files(fileIdx);
 
@@ -118,6 +121,9 @@ for fileIdx=1:size(obs_files,1)
             Outputs{fileIdx}=MergeObsSatPos(SATPOS,Compute_GFLC(obs,obs_header,FrequencyNumber.(datestr(obs_header.FirstObsTime,'mmmddyyyy')),GNSS_Systems),obs_header,HIPP); %merge satpos and GFLC data and calculates IPPs
             Outputs{fileIdx}.stat(:)=string(obs_header.MarkerName(1:4));
             Outputs_key(fileIdx,1)=1;
+            Station_lla=ecef2lla(obs_header.ApproxPosition);
+            Station_Coord(fileIdx,:)=table(string(obs_header.MarkerName(1:4)),Station_lla(2),Calculate_MoDip(Station_lla(1),Station_lla(2),dt(1),HIPP))
+
         catch ME     %catch error in calculating the GFLC and save error type along with faulty rinex
             fprintf(['Error computing GFLC for file: ' obs_file.name '\n']);
             Outputs{fileIdx}={ME obs_file.name};
@@ -212,6 +218,22 @@ if ToNeCalibrate
     StepTicTime=tic;
 end
 
+
+%CALIBRARTION FROM GFLC TO STEC USING GG TECHNIQUE
+
+if ToGGCalibrate
+    fprintf('CALIBRATING GEOM_FREE_LIN_COMB...\n')
+    
+    [offset, LoUA] = GG_Calibration(CleanOutputs,Station_Coord,30,2,HIPP);
+
+    for i =1:size(CleanOutputs,1)
+        index_arcID=find(LoUA==string(CleanOutputs(i,'ArcID').ArcID));
+        CleanOutputs.sTEC(i)=CleanOutputs.GFLC(i)-offset(index_arcID);
+    end
+    Calibrated=true;
+    Statistics.TimeNeeded.GGCalibration=toc(StepTicTime);
+    StepTicTime=tic;
+end
 
 % VERTICALIZATION OF TEC ARCS
 
