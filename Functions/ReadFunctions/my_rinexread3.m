@@ -45,6 +45,8 @@ end
 bodyBuffer = fileBuffer(headerSize+1:end);
 BodyBuffer_Mat = char(bodyBuffer);
 
+BodyBuffer_Mat=BodyBuffer_Mat(sum((BodyBuffer_Mat(:,1:3)==' '),2)<2,:);
+
 TimeLines_Keys=BodyBuffer_Mat(:,1)=='>';
 obsTimeLines=BodyBuffer_Mat(TimeLines_Keys,:);
 
