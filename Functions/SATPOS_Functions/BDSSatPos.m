@@ -1,6 +1,7 @@
 function BDSPos=BDSSatPos(nav,ts)
 
 %utility function that calculates the BeiDou satpos for each satellite and merge them into single table
+% inputs are the read nav files (using matlab built in function for rinex files) and datetime array of the timesamples for which to calculate the orbit
 
 [GPSweek,GPSsec] = greg2gps([year(ts) month(ts) day(ts) hour(ts) minute(ts) second(ts)]);
 
