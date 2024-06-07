@@ -44,24 +44,33 @@ lines_to_del=BodyBuffer_Mat(post_header_comments_lines,:); %Check that those lin
 lines_to_del(lines_to_del==' ')=[];
 
 if length(lines_to_del)==length(post_header_comments_lines)*2 || ...
-        length(lines_to_del)==length(post_header_comments_lines)*3 %Check that those are not observables (slicing line has only two char that are not blank)
+    length(lines_to_del)==length(post_header_comments_lines)*3 %Check that those are not observables (slicing line has only two char that are not blank)
     BodyBuffer_Mat(post_header_comments_lines,:)=[]; %Delete the line before RINEX FILE SPLICE
 end
 
 comment_lines=contains(string(BodyBuffer_Mat(:,:)),'COMMENT') | contains(string(BodyBuffer_Mat(:,:)),'APPROX POSITION XYZ'); %Find comment lines
-useless_time_lines=string(BodyBuffer_Mat(:,2:3))==string(obs_file_dir(end-2:end-1)) & string(BodyBuffer_Mat(:,29))~="0"; %find useless time lines, when no obs are present
+time_lines=(string(BodyBuffer_Mat(:,2:3))==string(obs_file_dir(end-2:end-1))  &  (BodyBuffer_Mat(:,33)=='G' | BodyBuffer_Mat(:,33)=='R' | BodyBuffer_Mat(:,33)=='E' | BodyBuffer_Mat(:,33)=='C'));    %find lines with times
+useless_time_lines=time_lines & string(BodyBuffer_Mat(:,29))~="0"; %find useless time lines, when no obs are present
+other_trash_lines=string(BodyBuffer_Mat(:,2:3))==string(obs_file_dir(end-2:end-1))  & BodyBuffer_Mat(:,29)~='0' & BodyBuffer_Mat(:,4)==' ' & BodyBuffer_Mat(:,19)=='.';
+splice_lines=sum(BodyBuffer_Mat==' ',2)>size(BodyBuffer_Mat,2)-4 & BodyBuffer_Mat(:,29)=='4';
 
-BodyBuffer_Mat=BodyBuffer_Mat(~comment_lines & ~useless_time_lines,:); %remove useless lines from obs section of rinex file
+BodyBuffer_Mat=BodyBuffer_Mat(~splice_lines & ~comment_lines & ~useless_time_lines & ~other_trash_lines,:); %remove useless lines from obs section of rinex file
 
-time_lines=string(BodyBuffer_Mat(:,2:3))==string(obs_file_dir(end-2:end-1));    %find lines with times
+time_lines=(string(BodyBuffer_Mat(:,2:3))==string(obs_file_dir(end-2:end-1)) &  (BodyBuffer_Mat(:,33)=='G' | BodyBuffer_Mat(:,33)=='R' | BodyBuffer_Mat(:,33)=='E' | BodyBuffer_Mat(:,33)=='C'));    %find lines with times
+
+
 
 key_lines=contains(string(BodyBuffer_Mat(:,:)),'G') | contains(string(BodyBuffer_Mat(:,:)),'R') | ... %find lines with satellite lists
-    contains(string(BodyBuffer_Mat(:,:)),'E') | contains(string(BodyBuffer_Mat(:,:)),'C') | ... 
-    contains(string(BodyBuffer_Mat(:,:)),'S'); 
+    contains(string(BodyBuffer_Mat(:,:)),'E') | contains(string(BodyBuffer_Mat(:,:)),'C') | ...
+    contains(string(BodyBuffer_Mat(:,:)),'S');
 
 times=datetime(my_str2num(TimeOfFirstObs{2}),my_str2num(BodyBuffer_Mat(time_lines,5:6)),my_str2num(BodyBuffer_Mat(time_lines,8:9)),... %read lines with times and convert it to datetime
     my_str2num(BodyBuffer_Mat(time_lines,11:12)),my_str2num(BodyBuffer_Mat(time_lines,14:15)),...
     my_str2num(BodyBuffer_Mat(time_lines,17:18)));
+
+if length(BodyBuffer_Mat(1,:))<68
+    BodyBuffer_Mat=[BodyBuffer_Mat repmat(' ',[size(BodyBuffer_Mat,1) 68-size(BodyBuffer_Mat,2)])];
+end
 
 numOfSats=my_str2num(BodyBuffer_Mat(time_lines,31:32)); %find number of satellites for each timestamp
 SatelliteIDs=reshape(BodyBuffer_Mat(key_lines,33:68)',1,[]);
@@ -85,7 +94,7 @@ for lineNum=1:ceil(numOfObs/5)  %every 5 observables per single satellite the li
     obsBuffer{lineNum}=observablesBuffer_mat(lineNum:ceil(numOfObs/5):end,:);
 end
 
-    
+
 for obsNum=1:numOfObs   %assign values to observables found in obslist (every 16 char is 1 observables, after 80 go to new line)
     lineNum=ceil(obsNum/5);
     charPos = ((obsNum -(lineNum - 1)*5)-1)*16 + 1;

@@ -30,7 +30,7 @@ files2dehata=[dir('*.crx') ; dir('*.*d') ; dir('*.*D')];
 if ~isempty(files2dehata)
     fprintf('De-Hatanaka obs files...\n')
     parfor i=1:length(files2dehata)
-        dos(['crx2rnx ' files2dehata(i).name]); %perfom de-hatanaka
+        dos(['crx2rnx ' files2dehata(i).name '-f -d']); %perfom de-hatanaka
         delete(files2dehata(i).name);
     end
 end

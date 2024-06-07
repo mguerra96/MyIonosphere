@@ -27,9 +27,14 @@ for iNavFile=1:length(nav_files) %iterate over navigational files
     if sum(dt2==datetime(doy2jd(year,doy),'ConvertFrom','juliandate'))==1 %check that given nav file is related to requested time period
 
         nav=rinexread([nav_files(iNavFile).folder '/' nav_files(iNavFile).name]);   %read navigational rinex
-        FrequencyNumber_Temp=unique(table(nav.GLONASS.SatelliteID,nav.GLONASS.FrequencyNumber,'VariableNames',{'prn','freqn'}),'rows'); %extract GLONASS satellit frequency shift
-        [~,repeatedRows]=unique(FrequencyNumber_Temp.prn);
-        FrequencyNumber.(datestr(datetime(doy2jd(year,doy),'ConvertFrom','juliandate'),'mmmddyyyy'))=FrequencyNumber_Temp(repeatedRows,:);  %save daily GLONASS freq number
+        if isfield(nav,"GLONASS")
+            FrequencyNumber_Temp=unique(table(nav.GLONASS.SatelliteID,nav.GLONASS.FrequencyNumber,'VariableNames',{'prn','freqn'}),'rows'); %extract GLONASS satellit frequency shift
+            [~,repeatedRows]=unique(FrequencyNumber_Temp.prn);
+            FrequencyNumber.(datestr(datetime(doy2jd(year,doy),'ConvertFrom','juliandate'),'mmmddyyyy'))=FrequencyNumber_Temp(repeatedRows,:);  %save daily GLONASS freq number
+        else
+            FrequencyNumber.(datestr(datetime(doy2jd(year,doy),'ConvertFrom','juliandate'),'mmmddyyyy'))=[];  %save daily GLONASS freq number
+        end
+
         dt=datetime(doy2jd(year,doy),'ConvertFrom','juliandate'):seconds(t_res):datetime(doy2jd(year,doy+1),'ConvertFrom','juliandate')-seconds(t_res);
         dt=intersect(dt,dt1);
 
