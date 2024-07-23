@@ -5,11 +5,16 @@ function GLOPos=GLOSatPos(nav,ts,t_res)
 
 [GPSweek,GPSsec] = greg2gps([year(ts) month(ts) day(ts) hour(ts) minute(ts) second(ts)]);
 
-GLOTimeWanted = [GPSweek,GPSsec]; 
+GLOTimeWanted = [GPSweek,GPSsec];
 
 GLOPos=[];
 
 GLONav=prepare_GLO(nav);
+
+if isfield(GLONav,"R00")
+    GLONav=rmfield(GLONav,"R00");
+end
+
 fieldnames_cell=fieldnames(GLONav);
 
 for i=1:length(fieldnames_cell)
@@ -28,7 +33,7 @@ for i=1:length(fieldnames_cell)
         end
         GLOPos_temp(mask,:).Time=ts(mask);
         GLOPos_temp(mask,1:4)=getSatPosGLO(GLOTimeWanted(mask,:),GLONav.(fieldname)(:,j),fieldname,t_res);
-        
+
     end
 
     GLOPos=[GLOPos ; GLOPos_temp];

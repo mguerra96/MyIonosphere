@@ -112,17 +112,19 @@ parfor (fileIdx=1:size(obs_files,1),NumOfThreads)
         if ~exist([DB_Dir '/Errors/' datestr(ts,'yy_mm_dd')],'dir')
             mkdir([DB_Dir '/Errors/' datestr(ts,'yy_mm_dd')])
         end
-        movefile([obs_file.folder '/' obs_file.name],[DB_Dir  '/Errors/' datestr(ts,'yy_mm_dd') '/' obs_file.name],'f');
+        try
+            movefile([obs_file.folder '/' obs_file.name],[DB_Dir  '/Errors/' datestr(ts,'yy_mm_dd') '/' obs_file.name],'f');
+        end
     end
 
 
     if ~isempty(obs)
         try
             Outputs{fileIdx}=MergeObsSatPos(SATPOS,Compute_GFLC(obs,obs_header,FrequencyNumber.(datestr(obs_header.FirstObsTime,'mmmddyyyy')),GNSS_Systems),obs_header,HIPP); %merge satpos and GFLC data and calculates IPPs
-            Outputs{fileIdx}.stat(:)=string(obs_header.MarkerName(1:4));
+            Outputs{fileIdx}.stat(:)=string(obs_file.name(1:4));
             Outputs_key(fileIdx,1)=1;
             Station_lla=ecef2lla(obs_header.ApproxPosition);
-            Station_Coord(fileIdx,:)=table(string(obs_header.MarkerName(1:4)),Station_lla(2),Calculate_MoDip(Station_lla(1),Station_lla(2),dt(1),HIPP))
+            Station_Coord(fileIdx,:)=table(string(obs_header.MarkerName(1:4)),Station_lla(2),Calculate_MoDip(Station_lla(1),Station_lla(2),dt(1),HIPP));
 
         catch ME     %catch error in calculating the GFLC and save error type along with faulty rinex
             fprintf(['Error computing GFLC for file: ' obs_file.name '\n']);
@@ -131,7 +133,9 @@ parfor (fileIdx=1:size(obs_files,1),NumOfThreads)
             if ~exist([DB_Dir '/Errors/' datestr(ts,'yy_mm_dd')],'dir')
                 mkdir([DB_Dir '/Errors/' datestr(ts,'yy_mm_dd')])
             end
-            movefile([obs_file.folder '/' obs_file.name],[DB_Dir '/Errors/'  datestr(ts,'yy_mm_dd') '/' obs_file.name],'f');
+            try
+                movefile([obs_file.folder '/' obs_file.name],[DB_Dir '/Errors/'  datestr(ts,'yy_mm_dd') '/' obs_file.name],'f');
+            end
         end
 
     end
@@ -150,6 +154,8 @@ Statistics.NumOfErrors=sum(Outputs_key==-1);
 
 CleanOutputs=Outputs(Outputs_key==1);
 
+clearvars Outputs
+
 if isempty(CleanOutputs)
     fprintf('ERROR: No valid observational files provided\n')
     return
@@ -162,6 +168,7 @@ fprintf('CREATING DATAFRAME WITH OBSERVATIONAL ARCS...\n')
 CleanOutputs=vertcat(CleanOutputs{:});  %merge all data into one single table to easy further computations
 CleanOutputs.ArcID=string([char(CleanOutputs.stat) repmat('_',height(CleanOutputs),1) char(CleanOutputs.prn)]);  %create 1 unique ID for each receiver-satellite pair
 CleanOutputs=CleanOutputs(CleanOutputs.ele>=Elevation_Cutoff,:);    %remove data that are at elevations lower than the treshold
+CleanOutputs=CleanOutputs(sum(isstrprop(char(CleanOutputs.stat),'alpha') | isstrprop(char(CleanOutputs.stat),'digit'),2)==4,:);
 
 Statistics.TimeNeeded.ToTable=toc(StepTicTime);
 StepTicTime=tic;
@@ -223,7 +230,7 @@ end
 
 if ToGGCalibrate
     fprintf('CALIBRATING GEOM_FREE_LIN_COMB...\n')
-    
+
     [offset, LoUA] = GG_Calibration(CleanOutputs,Station_Coord,30,2,HIPP);
 
     for i =1:size(CleanOutputs,1)
