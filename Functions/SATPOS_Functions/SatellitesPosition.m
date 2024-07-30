@@ -20,12 +20,12 @@ SATPOS.NavIC=[];
 NavSBAS=[];
 
 for iNavFile=1:length(nav_files) %iterate over navigational files
-
+    
     doy=str2num(nav_files(iNavFile).name(17:19));
     year=str2num(nav_files(iNavFile).name(13:16));
 
     if sum(dt2==datetime(doy2jd(year,doy),'ConvertFrom','juliandate'))==1 %check that given nav file is related to requested time period
-
+        
         nav=rinexread([nav_files(iNavFile).folder '/' nav_files(iNavFile).name]);   %read navigational rinex
         if isfield(nav,"GLONASS")
             FrequencyNumber_Temp=unique(table(nav.GLONASS.SatelliteID,nav.GLONASS.FrequencyNumber,'VariableNames',{'prn','freqn'}),'rows'); %extract GLONASS satellit frequency shift
@@ -38,38 +38,38 @@ for iNavFile=1:length(nav_files) %iterate over navigational files
         dt=datetime(doy2jd(year,doy),'ConvertFrom','juliandate'):seconds(t_res):datetime(doy2jd(year,doy+1),'ConvertFrom','juliandate')-seconds(t_res);
         dt=intersect(dt,dt1);
 
-        if sum(contains(GNSS_Systems,"G"))
+        if contains("G",GNSS_Systems) && isfield(nav,"GPS")
             SATPOS.GPS=[SATPOS.GPS ; GPSSatPos(nav,dt')];   %Calcuate GPS positions
         end
 
-        if sum(contains(GNSS_Systems,"E"))
+        if contains("E",GNSS_Systems) && isfield(nav,"Galileo")
             SATPOS.Galileo=[SATPOS.Galileo ; GALSatPos(nav,dt')];    %Calcuate GALILEO positions
         end
 
-        if sum(contains(GNSS_Systems,"C"))
+        if contains("C",GNSS_Systems) && isfield(nav,"BeiDou")
             SATPOS.BeiDou=[SATPOS.BeiDou ; BDSSatPos(nav,dt')];  %Calcuate BEiDOu positions
         end
 
-        if sum(contains(GNSS_Systems,"R"))
+        if contains("R",GNSS_Systems) && isfield(nav,"GLONASS")
             SATPOS.GLONASS=[SATPOS.GLONASS ; GLOSatPos(nav,dt',t_res)];  %Calcuate GLONASS positions
         end
 
-        if sum(contains(GNSS_Systems,"I"))
+        if contains("I",GNSS_Systems) && isfield(nav,"NavIC")
             SATPOS.NavIC=[SATPOS.NavIC ; NavICSatPos(nav,dt')];  %Calcuate GLONASS positions
         end
 
-        if sum(contains(GNSS_Systems,"J"))
+        if contains("J",GNSS_Systems) && isfield(nav,"QZSS")
             SATPOS.QZSS=[SATPOS.QZSS ; QZSSSatPos(nav,dt')];  %Calcuate GLONASS positions
         end
 
-        if sum(contains(GNSS_Systems,"S"))
+        if contains("S",GNSS_Systems) && isfield(nav,"SBAS")
             NavSBAS=[NavSBAS ; nav.SBAS];    %Calcuate SBAS positions
         end
 
     end
 end
 
-if sum(contains(GNSS_Systems,"S"))  %check that SBAS ECEF positions are in the requested SI units (can be both in km and m in the same nav file)
+if contains("S",GNSS_Systems) && isfield(nav,"SBAS")  %check that SBAS ECEF positions are in the requested SI units (can be both in km and m in the same nav file)
 
     NavSBAS=NavSBAS(NavSBAS.PositionX<1e5,:);
     NavSBAS.PositionX=NavSBAS.PositionX*1e3;

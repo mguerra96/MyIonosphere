@@ -158,6 +158,7 @@ clearvars Outputs
 
 if isempty(CleanOutputs)
     fprintf('ERROR: No valid observational files provided\n')
+    Outputs=[];
     return
 end
 

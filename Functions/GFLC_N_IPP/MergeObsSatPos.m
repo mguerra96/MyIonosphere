@@ -7,7 +7,7 @@ Constellations=fieldnames(GFLC);
 output=[];
 
 for Constellation=Constellations'
-    if ~isempty(GFLC.(Constellation{1}))
+    if ~isempty(GFLC.(Constellation{1})) && ~isempty(SATPOS.(Constellation{1}))
 
         SATPOS_GFLC=innerjoin(GFLC.(Constellation{1}),SATPOS.(Constellation{1}),'Keys',{'Time','prn'});
 
