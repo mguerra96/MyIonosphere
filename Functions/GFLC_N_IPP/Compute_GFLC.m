@@ -72,11 +72,11 @@ switch floor(obs_header.FileVersion)
             glo_gflc_func=@(x,y,z) GLO_GFLC(x,y,z,FrequencyNumber);
             if isfield(obs,'GLONASS') && ~isempty(obs.GLONASS) && sum(ismember(obs.GLONASS.Properties.VariableNames,{'L1C','L2P'}))==2
                 GFLC.GLONASS=rowfun(glo_gflc_func,obs.GLONASS,'InputVariables',{'L1C','L2P','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
-            elseif isfield(obs,'GLONASS') && ~isempty(obs.GLONASS) && sum(ismember(obs.GLONASS.Properties.VariableNames,{'L1C','L2C'}))==2           
+            elseif isfield(obs,'GLONASS') && ~isempty(obs.GLONASS) && sum(ismember(obs.GLONASS.Properties.VariableNames,{'L1C','L2C'}))==2
                 GFLC.GLONASS=rowfun(glo_gflc_func,obs.GLONASS,'InputVariables',{'L1C','L2C','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
-            elseif isfield(obs,'GLONASS') && ~isempty(obs.GLONASS) && sum(ismember(obs.GLONASS.Properties.VariableNames,{'L1P','L2P'}))==2         
+            elseif isfield(obs,'GLONASS') && ~isempty(obs.GLONASS) && sum(ismember(obs.GLONASS.Properties.VariableNames,{'L1P','L2P'}))==2
                 GFLC.GLONASS=rowfun(glo_gflc_func,obs.GLONASS,'InputVariables',{'L1P','L2P','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
-            elseif isfield(obs,'GLONASS') && ~isempty(obs.GLONASS) && sum(ismember(obs.GLONASS.Properties.VariableNames,{'L1P','L2C'}))==2        
+            elseif isfield(obs,'GLONASS') && ~isempty(obs.GLONASS) && sum(ismember(obs.GLONASS.Properties.VariableNames,{'L1P','L2C'}))==2
                 GFLC.GLONASS=rowfun(glo_gflc_func,obs.GLONASS,'InputVariables',{'L1P','L2C','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
             end
         end
@@ -113,6 +113,22 @@ switch floor(obs_header.FileVersion)
             elseif isfield(obs,'SBAS') && ~isempty(obs.SBAS) && sum(ismember(obs.SBAS.Properties.VariableNames,{'L1C','L5X'}))==2
                 sbas_gflc_func=@(x,y,z) SBAS_GFLC(x,y,z);
                 GFLC.SBAS=rowfun(sbas_gflc_func,obs.SBAS,'InputVariables',{'L1C','L5X','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
+            end
+        end
+
+        if sum(contains(GNSS_Systems,"J"))
+            if isfield(obs,'QZSS') && ~isempty(obs.QZSS) && sum(ismember(obs.QZSS.Properties.VariableNames,{'L1C','L2X'}))==2
+                qzss_gflc_func=@(x,y,z) QZSS_GFLC(x,y,z);
+                GFLC.QZSS=rowfun(qzss_gflc_func,obs.QZSS,'InputVariables',{'L1C','L2X','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
+            elseif isfield(obs,'QZSS') && ~isempty(obs.QZSS) && sum(ismember(obs.QZSS.Properties.VariableNames,{'L1X','L2X'}))==2
+                qzss_gflc_func=@(x,y,z) QZSS_GFLC(x,y,z);
+                GFLC.QZSS=rowfun(qzss_gflc_func,obs.QZSS,'InputVariables',{'L1X','L2X','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
+            elseif isfield(obs,'QZSS') && ~isempty(obs.QZSS) && sum(ismember(obs.QZSS.Properties.VariableNames,{'L1C','L2L'}))==2
+                qzss_gflc_func=@(x,y,z) QZSS_GFLC(x,y,z);
+                GFLC.QZSS=rowfun(qzss_gflc_func,obs.QZSS,'InputVariables',{'L1C','L2L','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
+            elseif isfield(obs,'QZSS') && ~isempty(obs.QZSS) && sum(ismember(obs.QZSS.Properties.VariableNames,{'L1X','L2L'}))==2
+                qzss_gflc_func=@(x,y,z) QZSS_GFLC(x,y,z);
+                GFLC.QZSS=rowfun(qzss_gflc_func,obs.QZSS,'InputVariables',{'L1X','L2L','SatelliteID'},'OutputVariableNames',{'gflc','prn'});
             end
         end
 
@@ -294,5 +310,25 @@ PrToTec = 1/40.308*(L1^2*L2^2)/(L1^2-L2^2)/1e16;
 GFLC = (phase1 * lambdaL1 - phase2 * lambdaL2) * PrToTec;
 
 prn=string(['S' num2str(prn,'%.02d')]);
+
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%% QZSS GFLC FUNCTION %%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function [GFLC , prn]=QZSS_GFLC(phase1,phase2,prn)
+
+c = 299792500.0;
+L1 = 1575.42e6;
+L2 =  1227.60e6;
+lambdaL1 = c / L1;
+lambdaL2 = c / L2;
+PrToTec = 1/40.308*(L1^2*L2^2)/(L1^2-L2^2)/1e16;
+
+GFLC = (phase1 * lambdaL1 - phase2 * lambdaL2) * PrToTec;
+
+prn=string(['J' num2str(prn,'%.02d')]);
 
 end
