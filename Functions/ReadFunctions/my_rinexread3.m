@@ -29,9 +29,11 @@ obs_header.FileVersion=my_str2num(FileVersion{2});
 obs_header.FirstObsTime=FirstObsTime;
 obs_header.MarkerName=MarkerName;
 
-obsTypes_Mat=char(HeaderBuffer(contains(HeaderBuffer,"OBS TYPES")));
+obsTypes_Mat=char(HeaderBuffer(contains(HeaderBuffer,"OBS TYPES") & ~contains(HeaderBuffer,"COMMENT")) );
 Sys_Obs_Types=[obsTypes_Mat(obsTypes_Mat(:,1)~=' ',1) obsTypes_Mat(obsTypes_Mat(:,1)~=' ',5:6)];
 obsNames_Mat=obsTypes_Mat(:,8:59);
+
+Obs_Types=struct();
 
 for iSys=1:size(Sys_Obs_Types,1)
     numOfLines=ceil(double(string(Sys_Obs_Types(iSys,2:3)))/13);
