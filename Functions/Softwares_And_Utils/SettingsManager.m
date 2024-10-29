@@ -1,4 +1,4 @@
-function [t_res,HIPP,Elevation_Cutoff,GNSS_Systems,ToNeCalibrate,ToGGCalibrate,ToVertical,MinArcLength]=SettingsManager(MyIonoSettings)
+function [t_res,HIPP,Elevation_Cutoff,GNSS_Systems,ToNeCalibrate,ToGGCalibrate,ToVertical,MinArcLength,Observable]=SettingsManager(MyIonoSettings)
 
 %function that handles the non madnatory settings and if they are not provided assigns default values
 
@@ -50,5 +50,10 @@ else
     MinArcLength=MyIonoSettings.MinArcLength/t_res;
 end
 
+if ~isfield(MyIonoSettings,'Observable')
+    Observable='Phase';
+else
+    Observable=MyIonoSettings.Observable;
+end
 
 end

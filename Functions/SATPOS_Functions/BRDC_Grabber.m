@@ -14,7 +14,7 @@ if ~exist(Nav_Dir)
     mkdir(Nav_Dir)
 end
 
-if ~isempty(dir([Nav_Dir '/*' year doy '*.rnx']))
+if ~isempty(dir([Nav_Dir '/*' year doy '0000*.rnx']))
     return
 end
 

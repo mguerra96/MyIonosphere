@@ -4,19 +4,19 @@ function [Outputs , Statistics]=MyIonosphere(MyIonoSettings)
 % THIS FUNCTION CAN HANDLE GPS, GLONASS, GALILEO, BEIDOU AND SBAS SATELLITES
 %
 % MANDATORY INPTUS ARE:
-% StartTime         (datetime)          ---> start_time in datetime format
-% StopTime          (datetime)          ---> stop_time in datetime format
-% RinexDir          (system path)       ---> Path to directory were obs files are stored
+% StartTime         (datetime)              ---> start_time in datetime format
+% StopTime          (datetime)              ---> stop_time in datetime format
+% RinexDir          (system path)           ---> Path to directory were obs files are stored
 %
 % NON MANDATORY INPUTS ARE:
-% TimeResolution    (seconds)           ---> Time resolution of rinex observational files (DEFAULT: 30s)
-% HIPP              (km)                ---> Height of the ionospheric layer for the calculation of the iono piercing point (DEFAULT: 300km)
-% ElevationCutoff   (degress)           ---> Minimum acceptable elevation, every data point with elevation lower than cutoff is not included (DEFAULT: 20°)
-% GNSSSystems       (list of systems)   ---> List of GNSS constellations to consider (DEFAULT: GREC)
-% ToNeCalibrate     (1 or 0)            ---> If true calibration bias is estimated through NeQuick (DEFAULT: 0)
-% MinArcLength      (seconds)           ---> If GNSS TEC arc is shorter than MinArcLength the arc is discarded (DEFAULT: 3600s)
-% ToVertical        (1 or 0)            ---> If true the arcs are verticalized (DEFAULT: 0)
-%
+% TimeResolution    (seconds)               ---> Time resolution of rinex observational files (DEFAULT: 30s)
+% HIPP              (km)                    ---> Height of the ionospheric layer for the calculation of the iono piercing point (DEFAULT: 300km)
+% ElevationCutoff   (degress)               ---> Minimum acceptable elevation, every data point with elevation lower than cutoff is not included (DEFAULT: 20°)
+% GNSSSystems       (list of systems)       ---> List of GNSS constellations to consider (DEFAULT: GREC)
+% ToNeCalibrate     (1 or 0)                ---> If true calibration bias is estimated through NeQuick (DEFAULT: 0)
+% MinArcLength      (seconds)               ---> If GNSS TEC arc is shorter than MinArcLength the arc is discarded (DEFAULT: 3600s)
+% ToVertical        (1 or 0)                ---> If true the arcs are verticalized (DEFAULT: 0)
+% Observable        ('Phase' or 'Doppler')  ---> Which observables to use, phase or doppler (DEFAULT: Phase)
 %
 % Written by Marco Guerra
 
@@ -39,7 +39,7 @@ else
     return
 end
 
-[t_res,HIPP,Elevation_Cutoff,GNSS_Systems,ToNeCalibrate,ToGGCalibrate,ToVertical,MinArcLength]=SettingsManager(MyIonoSettings);
+[t_res,HIPP,Elevation_Cutoff,GNSS_Systems,ToNeCalibrate,ToGGCalibrate,ToVertical,MinArcLength,Observable]=SettingsManager(MyIonoSettings);
 
 NumOfThreads=10;
 
@@ -92,8 +92,8 @@ fprintf('READING RINEX FILES...\n')
 
 WaitMessage = parfor_wait(length(obs_files), 'Waitbar', true);
 
-parfor (fileIdx=1:size(obs_files,1),NumOfThreads)
-% for fileIdx=1:size(obs_files,1)
+% parfor (fileIdx=1:size(obs_files,1),NumOfThreads)
+for fileIdx=1:size(obs_files,1)
 
     obs_file=obs_files(fileIdx);
 
@@ -120,14 +120,22 @@ parfor (fileIdx=1:size(obs_files,1),NumOfThreads)
 
     if ~isempty(obs)
         try
-            Outputs{fileIdx}=MergeObsSatPos(SATPOS,Compute_GFLC(obs,obs_header,FrequencyNumber.(datestr(obs_header.FirstObsTime,'mmmddyyyy')),GNSS_Systems),obs_header,HIPP); %merge satpos and GFLC data and calculates IPPs
+
+            if Observable=="Phase"
+                Outputs{fileIdx}=MergeObsSatPos(SATPOS,Compute_GFLC(obs,obs_header,FrequencyNumber.(datestr(obs_header.FirstObsTime,'mmmddyyyy')),GNSS_Systems),obs_header,HIPP); %merge satpos and GFLC data and calculates IPPs
+            elseif Observable=="Doppler"
+                Outputs{fileIdx}=MergeObsSatPos(SATPOS,Compute_Doppler(obs,obs_header,FrequencyNumber.(datestr(obs_header.FirstObsTime,'mmmddyyyy')),GNSS_Systems),obs_header,HIPP); %merge satpos and GFLC data and calculates IPPs
+            else
+                fprintf('ERROR: Observable field not recognized (Has to be Phase or Doppler)\n')
+            end
+
             Outputs{fileIdx}.stat(:)=string(obs_file.name(1:4));
             Outputs_key(fileIdx,1)=1;
             Station_lla=ecef2lla(obs_header.ApproxPosition);
             Station_Coord(fileIdx,:)=table(string(obs_header.MarkerName(1:4)),Station_lla(2),Calculate_MoDip(Station_lla(1),Station_lla(2),dt(1),HIPP));
 
         catch ME     %catch error in calculating the GFLC and save error type along with faulty rinex
-            fprintf(['Error computing GFLC for file: ' obs_file.name '\n']);
+            fprintf(['Error computing GFLC/RTEC for file: ' obs_file.name '\n']);
             Outputs{fileIdx}={ME obs_file.name};
             Outputs_key(fileIdx,1)=-1;
             if ~exist([DB_Dir '/Errors/' datestr(ts,'yy_mm_dd')],'dir')
@@ -199,20 +207,29 @@ CleanOutputs=CleanOutputs(~ismember(CleanOutputs.ArcID,Arc2Delete.ArcID),:);
 Statistics.TimeNeeded.CleanShortArcs=toc(StepTicTime);
 StepTicTime=tic;
 
-% CORRECTION OF PHASE JUMPS TO AVOID DETRENDING OUTLIERS
+% CORRECTION OF PHASE JUMPS TO AVOID DETRENDING OUTLIERS /// INTEGRATION OF ROT FOR DOPPLER MEASUREMENTS
 
-fprintf('CORRECTION OF PHASE JUMPS...\n')
-PhaseJumpsCorrector_f=@(x,t) PhaseJumpsCorrector(x,t,5);    %initialize the function that checks if phase jumps are present in GFLC arcs
-GFLC_Corrected=rowfun(PhaseJumpsCorrector_f,CleanOutputs,"GroupingVariables","ArcID","InputVariables",{'GFLC','Time'},"OutputVariableNames",{'GFLC','Time'});
-GFLC_Corrected=sortrows(GFLC_Corrected,{'ArcID','Time'});
-CleanOutputs.GFLC=GFLC_Corrected.GFLC;
-Calibrated=false;
+if Observable=="Phase"
+    fprintf('CORRECTION OF PHASE JUMPS...\n')
+    PhaseJumpsCorrector_f=@(x,t) PhaseJumpsCorrector(x,t,5);    %initialize the function that checks if phase jumps are present in GFLC arcs
+    GFLC_Corrected=rowfun(PhaseJumpsCorrector_f,CleanOutputs,"GroupingVariables","ArcID","InputVariables",{'GFLC','Time'},"OutputVariableNames",{'GFLC','Time'});
+    GFLC_Corrected=sortrows(GFLC_Corrected,{'ArcID','Time'});
+    CleanOutputs.GFLC=GFLC_Corrected.GFLC;
+elseif Observable=="Doppler"
+    fprintf('Integration of Doppler-derived ROT')
+    MyCumSum_f=@(x,t) MyCumSum(x,t);
+    GFLC_Integrated=rowfun(MyCumSum_f,CleanOutputs,"GroupingVariables","ArcID","InputVariables",{'GFLC','Time'},"OutputVariableNames",{'GFLC','Time'});
+    GFLC_Integrated=sortrows(GFLC_Integrated,{'ArcID','Time'});
+    CleanOutputs.GFLC=GFLC_Integrated.GFLC;
+end
 
 Statistics.TimeNeeded.PhaseJumps=toc(StepTicTime);
 StepTicTime=tic;
 
 
 % CALIBRATION WITH NeQuick2 TO REDUCE DETRENING ERRORS ON AMPLITUDE
+
+Calibrated=false;
 
 if ToNeCalibrate
     fprintf('CALIBRATION WITH NeQuick2...\n')
