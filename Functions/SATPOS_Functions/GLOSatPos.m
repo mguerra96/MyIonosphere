@@ -23,6 +23,9 @@ for i=1:length(fieldnames_cell)
     GLOPos_temp=array2table(GLOPos_temp);
     GLOPos_temp.prn(:)="placeholer";
     GLOPos_temp.Time(:)=datetime(2020,1,1,1,1,1);
+    if size(GLONav.(fieldname),2)<2
+        continue
+    end
     for j=1:size(GLONav.(fieldname),2)
         if j==1
             mask= GLOTimeWanted(:,2)<GLONav.(fieldname)(14,j+1);

@@ -92,8 +92,8 @@ fprintf('READING RINEX FILES...\n')
 
 WaitMessage = parfor_wait(length(obs_files), 'Waitbar', true);
 
-% parfor (fileIdx=1:size(obs_files,1),NumOfThreads)
-for fileIdx=1:size(obs_files,1)
+parfor (fileIdx=1:size(obs_files,1),NumOfThreads)
+% for fileIdx=1:size(obs_files,1)
 
     obs_file=obs_files(fileIdx);
 
