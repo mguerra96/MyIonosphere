@@ -14,20 +14,24 @@ if ~exist(Nav_Dir)
     mkdir(Nav_Dir)
 end
 
-if ~isempty(dir([Nav_Dir '/*' year doy '*.rnx']))
+if ~isempty(dir([Nav_Dir '/*' year doy '0000*.rnx']))
     return
 end
 
-aux_ftp=ftp('www.epncb.oma.be');
-cd(aux_ftp,['pub/obs/BRDC/' year ]);
-brdc2get=dir(aux_ftp);
+% aux_ftp=ftp('www.epncb.oma.be');
+% cd(aux_ftp,['pub/obs/BRDC/' year ]);
+% brdc2get=dir(aux_ftp);
+% for i=1:length(brdc2get)
+%     if contains(brdc2get(i).name,[year doy])
+%         mget(aux_ftp,brdc2get(i).name,Nav_Dir);
+%     end
+% end
+% close(aux_ftp)
 
-for i=1:length(brdc2get)
-    if contains(brdc2get(i).name,[year doy])
-        mget(aux_ftp,brdc2get(i).name,Nav_Dir);
-    end
-end
 
+aux_ftp=ftp('igs-ftp.bkg.bund.de');
+cd(aux_ftp,['/IGS/BRDC/' year '/' doy]);
+mget(aux_ftp,'BRDC00WRD_S_*',Nav_Dir);
 close(aux_ftp)
 
 Unzipper_Path=char(mlreportgen.utils.findFile('7za.exe'));
